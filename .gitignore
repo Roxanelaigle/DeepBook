@@ -1,5 +1,7 @@
 raw_data/
 
+notebooks/
+
 .python-version
 
 *:Zone.Identifier
