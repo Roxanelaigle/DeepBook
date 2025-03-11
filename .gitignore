@@ -1,9 +1,18 @@
+# Raw data directory
 raw_data/
 
+# Model files
+*.npy
+
+# Python version file
 .python-version
 
-*:Zone.Identifier
-
-.DS_Store
-
+# Jupyter notebooks directory
 notebooks/
+
+# Python cache directories
+__pycache__/
+
+# Windows Zone Identifier and macOS Finder metadata files
+*:Zone.Identifier
+.DS_Store
