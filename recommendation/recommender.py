@@ -21,10 +21,13 @@ def recommend_books(database: pd.DataFrame,
     Output the top n_neighbors recommendations as a DataFrame.
     """
     if curiosity == 1:
+         # filter by genre
         candidates = database[database['Genre'] == book_genre]
     elif curiosity == 2:
+        # do not filter by genre
         candidates = database
     elif curiosity == 3:
+        # filter by other genres
         candidates = database[database['Genre'] != book_genre]
     else:
         raise ValueError("Invalid curiosity level. Choose 1, 2, or 3.")
