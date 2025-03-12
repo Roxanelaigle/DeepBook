@@ -1,1 +1,4 @@
 # Requirements list TBD
+tensorflow
+transformers
+loguru
