@@ -1,3 +1,4 @@
+# Raw data directory
 raw_data/
 notebooks/
 .env
@@ -5,8 +6,20 @@ notebooks/
 
 notebooks/
 
+# Model files
+*.npy
+
+# Python version file
 .python-version
 
-*:Zone.Identifier
+# Jupyter notebooks directory
+notebooks/
 
+# Python cache directories
+__pycache__/
+.ipynb_checkpoints/
+*.egg-info/
+
+# Windows Zone Identifier and macOS Finder metadata files
+*:Zone.Identifier
 .DS_Store

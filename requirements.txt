@@ -7,3 +7,10 @@ easyocr==1.7.2
 
 ### User interface ###
 streamlit==1.43.1
+
+### Logging ###
+loguru==0.7.3
+
+### Machine Learning ###
+tensorflow==2.18.0
+transformers==4.49.0
