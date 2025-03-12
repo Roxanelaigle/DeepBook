@@ -22,26 +22,19 @@ def recommend_books(database: pd.DataFrame,
     """
     if curiosity == 1:
          # filter by genre
-        candidates = database[database['Genre'] == book_genre]
+        candidates = database[database['Categories'] == book_genre]
     elif curiosity == 2:
         # do not filter by genre
         candidates = database
     elif curiosity == 3:
         # filter by other genres
-        candidates = database[database['Genre'] != book_genre]
+        candidates = database[database['Categories'] != book_genre]
     else:
         raise ValueError("Invalid curiosity level. Choose 1, 2, or 3.")
 
     if candidates.empty:
         return pd.DataFrame()
 
-    candidate_embeddings = np.vstack(candidates['embeddings'].values)
-    distances, indices = knn_model.kneighbors([input_embedding],
-                                              n_neighbors=min(n_neighbors+1, len(candidate_embeddings)))
+    recommended = candidates.iloc[1]
 
-    if curiosity == 3:
-        recommended = candidates.iloc[indices[0][-n_neighbors:]]
-    else:
-        recommended = candidates.iloc[indices[0][1:n_neighbors+1]]
-
-    return recommended[['Title', 'Genre']]
+    return recommended[['Title', 'Authors', 'Categories', 'Description']]

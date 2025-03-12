@@ -20,7 +20,9 @@ def get_embeddings(texts: List[str], batch_size: int = 32) -> np.ndarray:
             texts[i:i+batch_size], return_tensors='tf',
             truncation=True, padding=True, max_length=512
         )
-        output = model(batch)
-        batch_emb = tf.reduce_mean(output.last_hidden_state, axis=1).numpy()
+        # Process the batch on GPU
+        with tf.device('/GPU:0'):
+            output = model(batch)
+            batch_emb = tf.reduce_mean(output.last_hidden_state, axis=1).numpy()
         embeddings.append(batch_emb)
     return np.vstack(embeddings)
