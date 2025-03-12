@@ -1,3 +1,9 @@
-# Requirements list TBD
-pytesseract==0.3.13
-opencv-python==4.11.0.86
+############################
+### List of requirements ###
+############################
+
+### Covers to text conversion ###
+easyocr==1.7.2
+
+### User interface ###
+streamlit==1.43.1
