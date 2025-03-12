@@ -1,5 +1,10 @@
 # Raw data directory
 raw_data/
+notebooks/
+.env
+
+
+notebooks/
 
 # Model files
 *.npy
