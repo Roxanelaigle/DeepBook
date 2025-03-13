@@ -1,10 +1,23 @@
+'''
+Note: the API calls are all done in French language only
+'''
+
+# imports
+
 import time
 import csv
-import pandas as pd
 import requests
 import os
 
-### Note: the API calls are all done in French language only
+# constants
+
+KEY_BOOK_INFO_LIST = [
+        "Title", "Authors", "Publisher", "Published Date", "Categories",
+        "Description", "Page Count", "Language", "ISBN-10", "ISBN-13", "Preview Link", "Info Link",
+        "Average Rating", "Ratings Count", "Image Link", "Saleability", "Price", "Currency"
+    ]
+
+# internal functions
 
 def database_row_inputer(book: dict) -> list:
     '''
@@ -64,6 +77,8 @@ def database_row_inputer(book: dict) -> list:
 
     return row
 
+# external functions
+
 def gbooks_scrapper(
     scrapping_type: str,            # either "subject" or "inpublisher"
     api_key: str,                   # private API key
@@ -81,12 +96,7 @@ def gbooks_scrapper(
 
     # ✅ Create an empty CSV file with pre-set column names
 
-    columns_names_without_API_info = [
-            "Title", "Authors", "Publisher", "Published Date", "Categories",
-            "Description", "Page Count", "Language", "ISBN-10", "ISBN-13", "Preview Link", "Info Link",
-            "Average Rating", "Ratings Count", "Image Link", "Saleability", "Price", "Currency"
-        ]
-    columns_names = ["Search Key", "API Request Number"] + columns_names_without_API_info
+    columns_names = ["Search Key", "API Request Number"] + KEY_BOOK_INFO_LIST
 
     folder_path = os.path.join(".","raw_data","gbooks_scrapping")
     os.makedirs(folder_path, exist_ok=True) # creation of the path if it doesn't exist
@@ -153,7 +163,7 @@ def gbooks_scrapper(
 
 def gbooks_lookup(search_words: list[str]) -> dict:
     '''
-    Returns a dict with all the book info, based on a list of words to be searched in Google Books' API.
+    Returns a dict with all the key book info, based on a list of words to be searched in Google Books' API.
     Search is set by default to French only.
     '''
     params = {
@@ -165,20 +175,36 @@ def gbooks_lookup(search_words: list[str]) -> dict:
     }
     response = requests.get('https://www.googleapis.com/books/v1/volumes', params=params)
     data = response.json()
-    columns_names_without_API_info = [
-            "Title", "Authors", "Publisher", "Published Date", "Categories",
-            "Description", "Page Count", "Language", "ISBN-10", "ISBN-13", "Preview Link", "Info Link",
-            "Average Rating", "Ratings Count", "Image Link", "Saleability", "Price", "Currency"
-        ]
 
     # retrieving the information
 
     try:
         book = data.get("items", [])[0]
         row = database_row_inputer(book)
-        return dict(zip(columns_names_without_API_info,row))
+        return dict(zip(KEY_BOOK_INFO_LIST,row))
     except:
         print("\n❌ Error: no close match found on Google Books")
+        return None
+
+def gbooks_look_isbn(isbn_input: str) -> dict:
+    '''
+    Returns a dict with all the key book info, based on an ISBN to be searched in Google Books' API.
+    '''
+    params = {
+        'q': f'isbn:{isbn_input}',
+        'maxResults': 1
+    }
+    response = requests.get('https://www.googleapis.com/books/v1/volumes', params=params)
+    data = response.json()
+
+    # retrieving the information
+
+    try:
+        book = data.get("items", [])[0]
+        row = database_row_inputer(book)
+        return dict(zip(KEY_BOOK_INFO_LIST,row))
+    except:
+        print("\n❌ Error: this ISBN is not referenced in Google Books")
         return None
 
 if __name__ == "__main__":
