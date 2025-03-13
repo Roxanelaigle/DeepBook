@@ -35,6 +35,7 @@ def recommend_books(database: pd.DataFrame,
     if candidates.empty:
         return pd.DataFrame()
 
-    recommended = candidates.iloc[1]
-
-    return recommended[['Title', 'Authors', 'Categories', 'Description']]
+    distances, indices = knn_model.kneighbors(input_embedding.reshape(1, -1), n_neighbors=n_neighbors)
+    recommended_indices = indices[0]
+    recommended_books = candidates.iloc[recommended_indices]
+    return recommended_books[['Title', 'Authors', 'Categories', 'Description', 'ISBN-13', 'Image Link']]
