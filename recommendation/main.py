@@ -7,9 +7,13 @@ from recommendation.save_load import load_embeddings, save_embeddings
 from recommendation.embeddings import get_embeddings
 from recommendation.preprocessing import load_dataset, prepare_text_features
 from recommendation.recommender import fit_knn, recommend_books
+import json
 
 
-def main(input_book: Dict, dataset_path: str, embeddings_file_path: str, curiosity: int = 1):
+def main(input_book: Dict,
+         dataset_path: str,
+         embeddings_file_path: str,
+         curiosity: int = 1) -> Dict:
     """
     Main script to load dataset, generate/load embeddings, fit KNN model, and recommend books.
 
@@ -56,8 +60,30 @@ def main(input_book: Dict, dataset_path: str, embeddings_file_path: str, curiosi
         n_neighbors=1
     )
 
+    logger.error(type(recommended_books))
+
     logger.success("Recommendations generated successfully.")
     logger.info(f"Recommended Book:\n{recommended_books}")
+    result = {
+        "input_book": {
+            "title": input_book['Title'],
+            "authors": input_book['Authors'],
+            "image_link": input_book['Image Link'],
+            "isbn": input_book['ISBN-13'],
+            "description": input_book['Description']
+        },
+        "output_books": [
+            {
+                "title": book['Title'],
+                "authors": book['Authors'],
+                "image_link": book['Image Link'],
+                "isbn": book['ISBN-13'],
+                "description": book['Description']
+            } for _, book in recommended_books.iterrows()
+        ]
+    }
+
+    return result
 
 
 if __name__ == "__main__":
@@ -90,4 +116,8 @@ if __name__ == "__main__":
         'Currency': 'Non disponible'
     }
 
-    main(input_book, dataset_path, embeddings_file_path, curiosity)
+    recommended_books = main(input_book, dataset_path, embeddings_file_path, curiosity)
+
+    print()
+    print("Recommended Book:")
+    print(json.dumps(recommended_books, indent=4, ensure_ascii=False))
