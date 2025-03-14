@@ -60,8 +60,6 @@ def main(input_book: Dict,
         n_neighbors=1
     )
 
-    logger.error(type(recommended_books))
-
     logger.success("Recommendations generated successfully.")
     logger.info(f"Recommended Book:\n{recommended_books}")
     result = {
