@@ -80,7 +80,7 @@ if "page" in st.session_state and st.session_state["page"] == "show_recommendati
 
 
     if output_book:
-        url = output_book.get("image")+ '&fife=w1080'
+        url = output_book.get("image_link")+'&fife=w1080'
         st.image(url, caption=output_book.get("title"), width=200)
 
         st.write(f"**Title:** {output_book.get('title')}")
