@@ -8,6 +8,7 @@ import time
 import csv
 import requests
 import os
+import pandas as pd
 
 # constants
 
@@ -203,9 +204,49 @@ def gbooks_look_isbn(isbn_input: str) -> dict:
         book = data.get("items", [])[0]
         row = database_row_inputer(book)
         return dict(zip(KEY_BOOK_INFO_LIST,row))
-    except:
-        print("\n❌ Error: this ISBN is not referenced in Google Books")
+
+    except (IndexError, KeyError):
+        print(f"\n⚠️ Google Books API: ISBN {isbn_input} not found. Looking in local database...")
+
+    # Recherche dans CSV
+    try:
+        df = pd.read_csv('raw_data/VF_data_base_consolidate_clean.csv', dtype=str)
+        result = df[(df['ISBN-10'] == isbn_input) | (df['ISBN-13'] == isbn_input)]
+
+        if not result.empty:
+            print(f"\n✅ ISBN {isbn_input} found in local database.")
+            row = result.iloc[0].to_dict()
+
+            formatted_row = {
+                'Title': row.get('Title'),
+                'Authors': row.get('Authors'),
+                'Publisher': row.get('Publisher'),
+                'Published Date': row.get('Published Date'),
+                'Categories': row.get('Categories'),
+                'Description': row.get('Description'),
+                'Page Count': int(row['Page Count']) if row.get('Page Count') and row['Page Count'].isdigit() else 0,
+                'Language': row.get('Language'),
+                'ISBN-10': row.get('ISBN-10'),
+                'ISBN-13': row.get('ISBN-13'),
+                'Preview Link': row.get('Preview Link'),
+                'Info Link': row.get('Info Link'),
+                'Average Rating': row.get('Average Rating'),
+                'Ratings Count': int(row['Ratings Count']) if row.get('Ratings Count') and row['Ratings Count'].isdigit() else 0,
+                'Image Link': row.get('Image Link'),
+                'Saleability': row.get('Saleability'),
+                'Price': float(row['Price']) if row.get('Price') not in ['Non disponible', '', None] else 'Non disponible',
+                'Currency': row.get('Currency')
+            }
+
+            return formatted_row
+        else:
+            print(f"\n❌ ISBN {isbn_input} not found in local database.")
+            return None
+
+    except Exception as e:
+        print(f"\n❌ Error reading local CSV: {e}")
         return None
 
 if __name__ == "__main__":
-    pass
+
+    print(gbooks_look_isbn("2747306747"))
