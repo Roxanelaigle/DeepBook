@@ -12,6 +12,7 @@ pylint==3.3.5
 pytest==8.3.5
 scikit-learn==1.6.1
 seaborn==0.13.2
+setuptools==76.0.0
 
 ### Covers to text conversion ###
 easyocr==1.7.2
@@ -25,6 +26,7 @@ loguru==0.7.3
 
 ### Machine Learning ###
 tensorflow==2.18.0
+tf-keras==2.18.0
 transformers==4.49.0
 sentencepiece==0.2.0
 
