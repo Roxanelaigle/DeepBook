@@ -13,7 +13,8 @@ import json
 def main(input_book: Dict,
          dataset_path: str,
          embeddings_file_path: str,
-         curiosity: int = 1) -> Dict:
+         curiosity: int = 1,
+         n_neighbors: int = 1) -> Dict:
     """
     Main script to load dataset, generate/load embeddings, fit KNN model, and recommend books.
 
@@ -57,7 +58,7 @@ def main(input_book: Dict,
         knn_model,
         book_genre=input_book['Categories'],
         curiosity=curiosity,
-        n_neighbors=1
+        n_neighbors=n_neighbors
     )
 
     logger.success("Recommendations generated successfully.")
@@ -85,7 +86,7 @@ def main(input_book: Dict,
 
 
 if __name__ == "__main__":
-    curiosity = 3
+    curiosity = 2
     dataset_path = Path("raw_data/VF_data_base_consolidate_clean.csv")
 
     n_books = pd.read_csv(dataset_path).shape[0]
