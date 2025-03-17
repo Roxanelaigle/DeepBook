@@ -20,8 +20,8 @@ async def predict(request: Request):
     print("curiosity_level : " + str(curiosity_level))
     if 'image_array' in data.keys() :
         image_array = np.array(data['image_array'], dtype=np.uint8)
-        return main_pipeline(image_array, curiosity_level,app.state.embeddings_file_path, app.state.dataset_path)
+        return main_pipeline(image_array, curiosity_level,app.state.embeddings_file_path, app.state.dataset_path,n_neighbors=3)
     else :
         isbn = data['isbn']
         print(isbn)
-        return main_pipeline(isbn, curiosity_level, app.state.embeddings_file_path, app.state.dataset_path)
+        return main_pipeline(isbn, curiosity_level, app.state.embeddings_file_path, app.state.dataset_path, n_neighbors=3)
