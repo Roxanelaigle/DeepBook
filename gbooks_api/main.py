@@ -78,6 +78,9 @@ def database_row_inputer(book: dict) -> list:
 
     return row
 
+def url_manual_encoder(value):
+    return str(value).replace(" ", "%20").replace(":", "%3A").replace(",", "%2C")
+
 # external functions
 
 def gbooks_scrapper(
@@ -109,7 +112,7 @@ def gbooks_scrapper(
 
     # ✅ Iterative loop on each search key of the list provided
 
-    number_of_requests = 5     # maximum 200 results on a specific search, i.e., 5 requests of 40 results
+    number_of_requests = 5 # maximum 200 results on a specific search, i.e., 5 requests of 40 results
     max_results = 40
 
     for search_key in list_of_search_keys:
@@ -118,9 +121,8 @@ def gbooks_scrapper(
 
         for request in range(0, number_of_requests):
             start_index = request * max_results
-            print(f"➡️ Request #{request} | startIndex={start_index}")
             params = {
-                'q': f'{scrapping_type}:{search_key}',
+                'q': f'{scrapping_type}:{search_key}+lang:fr', # Language restricted to French
                 'key': api_key,
                 'orderBy': order_by,
                 'printType': "books",
@@ -130,20 +132,19 @@ def gbooks_scrapper(
             }
 
             base_url = 'https://www.googleapis.com/books/v1/volumes'
-            full_url = f"{base_url}?{'&'.join([f'{key}={value}' for key, value in params.items()])}"
-            print(f"➡️ API URL called: {full_url}")
+            full_url = f"{base_url}?{'&'.join([f'{key}={url_manual_encoder(value)}' for key, value in params.items()])}"
+            print(f"➡️ Request #{request} | startIndex={start_index} | API URL called : {full_url}")
 
             response = requests.get(base_url, params=params)
             data = response.json()
 
             if response.status_code != 200:
-                print(f"❌ Error {response.status_code} for the request #{request} | startIndex={start_index}")
-                print(response.text)
+                print(f"❌ Request #{request} | startIndex={start_index} | Error {response.status_code}: {data['error']['message']}")
                 time.sleep(1)
                 continue
 
             if 'items' not in data:
-                print(f"⚠️ No result for the request #{request} | startIndex={start_index}")
+                print(f"⚠️ Request #{request} | startIndex={start_index} | No results for the request.")
                 time.sleep(1)
                 continue
 
@@ -160,10 +161,10 @@ def gbooks_scrapper(
                 writer.writerows(books)
 
             books_counter += len(books)
-            print(f"✅ {len(books)} books added for Request #{request} | startIndex={start_index}")
+            print(f"✅ Request #{request} | startIndex={start_index} | Fetching done. {len(books)} books added.")
             time.sleep(0.1)
 
-    print(f"🎉 Scraping terminé ! {books_counter} livres consolidés et enregistrés dans {output_csv_url}")
+    print(f"🎉 Scrapping finalize! {books_counter} books retrieved and saved in the following file: {output_csv_url}")
     pass
 
 def gbooks_lookup(search_words: list[str], show_output: bool = False) -> dict:
