@@ -162,7 +162,7 @@ def gbooks_scrapper(
     print(f"🎉 Scraping terminé ! {books_counter} livres consolidés et enregistrés dans {output_csv_url}")
     pass
 
-def gbooks_lookup(search_words: list[str]) -> dict:
+def gbooks_lookup(search_words: list[str], show_output: bool = False) -> dict:
     '''
     Returns a dict with all the key book info, based on a list of words to be searched in Google Books' API.
     Search is set by default to French only.
@@ -182,10 +182,28 @@ def gbooks_lookup(search_words: list[str]) -> dict:
     try:
         book = data.get("items", [])[0]
         row = database_row_inputer(book)
-        return dict(zip(KEY_BOOK_INFO_LIST,row))
+        result = dict(zip(KEY_BOOK_INFO_LIST,row))
+        if show_output == True:
+            print(f"Search words: {search_words}")
+            print("✅ A close match has been found on Google Books:")
+            print(result)
+        return result
     except:
-        print("\n❌ Error: no close match found on Google Books")
+        if show_output == True:
+            print(f"Search words: {search_words}")
+            print("❌ Error: no close match was found on Google Books")
         return None
+
+def gbooks_lookup_multibooks(list_of_search_words: list[list[str]], show_output: bool = False) -> list[dict]:
+    results = []
+    counter = 0
+    len_of_input = len(list_of_search_words)
+    for search_words in list_of_search_words:
+        if show_output == 1:
+            counter += 1
+            print(f"➡️ Searching for the book #{counter} out of {len_of_input}")
+        results.append(gbooks_lookup(search_words,show_output))
+    return results
 
 def gbooks_look_isbn(isbn_input: str) -> dict:
     '''

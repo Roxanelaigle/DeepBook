@@ -38,7 +38,7 @@ def yolo_book_scanner(img: np.ndarray, show_output: bool = False) -> list[np.nda
     if len(cropped_books) == 0:
         if show_output == True:
             print(f"⚠️ Picture has been scanned, but no book was detected. Returning original image as output.")
-            sv.plot_image(img)
+            sv.plot_image(img, size=(7,7))
         return [img]
 
     # optional: display the output with the bounding boxes
@@ -65,7 +65,7 @@ def yolo_book_scanner(img: np.ndarray, show_output: bool = False) -> list[np.nda
 
         # ploting image
         print(f"✅ Picture has been scanned. {len(cropped_books)} book(s) have been identified in the picture.")
-        sv.plot_image(annotated_img)
+        sv.plot_image(annotated_img, size=(7,7))
 
     # making the scans horizontal in the case the books were scanned vertically (useful for pictures of spines)
     # rule used: vertical length should be > 3 * horizontal length
@@ -109,7 +109,7 @@ def picture_reader(img: np.ndarray, show_output: bool = False) -> list[str]:
     if len(text_chunks) == 0:
         if show_output == True:
             print(f"⚠️ Picture has been scanned, but no text was detected. Showing original image instead.")
-            sv.plot_image(img)
+            sv.plot_image(img, size=(7,7))
         return text_chunks
 
     # optional: display the output with the bounding boxes
@@ -118,7 +118,7 @@ def picture_reader(img: np.ndarray, show_output: bool = False) -> list[str]:
         annotated_img = img.copy()
 
         # defining colors & labels
-        colors = np.array([6 if keep else 1 for keep in keep_or_not]) # trick: using supervision's class_id default colors
+        colors = np.array([9 if keep else 1 for keep in keep_or_not]) # trick: using supervision's class_id default colors
         labels = [str(int(proba*100))+"%" for _,_,proba in results]
 
         # getting bounding boxes coordinates in the right format for supervision
@@ -138,9 +138,26 @@ def picture_reader(img: np.ndarray, show_output: bool = False) -> list[str]:
 
         # ploting image
         print(f"✅ Picture has been OCRised. {len(text_chunks)} valid block(s) of texts have been successfully identified.")
-        sv.plot_image(annotated_img)
+        print(text_chunks)
+        sv.plot_image(annotated_img, size=(7,7))
 
     return text_chunks
+
+def picture_reader_multibooks(img: np.ndarray, show_output: bool = False) -> list[list[str]]:
+    '''
+    1. Applies YOLO to cut the initial images into multiple sub-images each containing 1 book.
+    2. Applies picture_reader on each sub-image (1 book = 1 list of strings).
+    3. Returns a list of list of strings.
+    '''
+    if show_output == True:
+        print(f"➡️ Applying YOLO to identify all the books of the picture input.")
+    imgs = yolo_book_scanner(img,show_output)
+    result = []
+    if show_output == True:
+        print(f"➡️ Reading the text of {len(imgs)} books identified thanks to the YOLO model.")
+    for i in imgs:
+        result.append(picture_reader(i,show_output))
+    return result
 
 if __name__ == "__main__":
     pass
