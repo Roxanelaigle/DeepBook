@@ -116,7 +116,7 @@ def gbooks_scrapper(
 
         print(f"📚 Looking for : {search_key}")
 
-        for request in range(0, number_of_requests-1):
+        for request in range(0, number_of_requests):
             start_index = request * max_results
             print(f"➡️ Request #{request} | startIndex={start_index}")
             params = {
@@ -124,22 +124,26 @@ def gbooks_scrapper(
                 'key': api_key,
                 'orderBy': order_by,
                 'printType': "books",
-                'langRestrict': "fr",
+                'langRestrict': "fr", # Language restricted to French
                 'maxResults': max_results,
                 'startIndex': start_index
             }
 
-            response = requests.get('https://www.googleapis.com/books/v1/volumes', params=params)
+            base_url = 'https://www.googleapis.com/books/v1/volumes'
+            full_url = f"{base_url}?{'&'.join([f'{key}={value}' for key, value in params.items()])}"
+            print(f"➡️ API URL called: {full_url}")
+
+            response = requests.get(base_url, params=params)
             data = response.json()
 
             if response.status_code != 200:
-                print(f"❌ Error {response.status_code} for the request #{request + 1}")
+                print(f"❌ Error {response.status_code} for the request #{request} | startIndex={start_index}")
                 print(response.text)
                 time.sleep(1)
                 continue
 
             if 'items' not in data:
-                print(f"⚠️ No result for the request #{request + 1}")
+                print(f"⚠️ No result for the request #{request} | startIndex={start_index}")
                 time.sleep(1)
                 continue
 
