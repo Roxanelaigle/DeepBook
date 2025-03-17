@@ -1,7 +1,8 @@
-from sklearn.neighbors import NearestNeighbors
-from sklearn.metrics.pairwise import cosine_similarity as cosine_sim
 import numpy as np
 import pandas as pd
+from loguru import logger
+from sklearn.neighbors import NearestNeighbors
+from sklearn.metrics.pairwise import cosine_similarity as cosine_sim
 
 def fit_knn(embeddings: np.ndarray, n_neighbors: int = 10) -> NearestNeighbors:
     """"
@@ -49,8 +50,7 @@ def recommend_books(database: pd.DataFrame,
 
     # Make sure we don't exceed the dataset size
     end_index = min(start_index + n_neighbors, total_books)
-    from loguru import logger
-    logger.error(f"Start index: {start_index}, End index: {end_index}")
+    logger.info(f"Start index: {start_index}, End index: {end_index}")
     # Select exactly n_neighbors books
     recommended_indices = indices[start_index:end_index] if cosine_similarity else indices[0][start_index:end_index]
 
