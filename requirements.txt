@@ -14,9 +14,13 @@ scikit-learn==1.6.1
 seaborn==0.13.2
 setuptools==76.0.0
 
+### Base image packages ###
+opencv-python==4.11.0.86
+
 ### Covers to text conversion ###
 easyocr==1.7.2
-opencv-python==4.11.0.86
+supervision==0.25.1
+ultralytics==8.3.89
 
 ### User interface ###
 streamlit==1.43.1
