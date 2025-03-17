@@ -12,7 +12,8 @@ def main_pipeline(input_book: Union[np.array, str],
                   curiosity: int,
                   embeddings_file_path: str,
                   dataset_path: str,
-                  cosine_similarity: bool = False) -> Dict:
+                  cosine_similarity: bool = False,
+                  n_neighbors: int = 1) -> Dict:
     """
     Main pipeline to recommend books based on an input book.
     Args:
@@ -20,6 +21,8 @@ def main_pipeline(input_book: Union[np.array, str],
         curiosity: Number of books to recommend
         embeddings_file_path: Path to the embeddings file
         dataset_path: Path to the dataset
+        cosine_similarity: Flag to use cosine similarity or KNN distance
+        n_neighbors: Number of neighbors to consider in the KNN algorithm
 
     Returns:
         recommended_books: A dictionary containing the recommended books information
@@ -41,14 +44,17 @@ def main_pipeline(input_book: Union[np.array, str],
                                           dataset_path,  # Path to the dataset
                                           embeddings_file_path,  # Path to the embeddings file
                                           curiosity,
-                                          cosine_similarity = cosine_similarity)
+                                          cosine_similarity = cosine_similarity,
+                                          n_neighbors=n_neighbors)
     return recommended_books
 
 if __name__ == "__main__":
     # Set the curiosity level
-    curiosity = 3
+    curiosity = 1
     # Set the cosine similarity flag - cosine_similarity or KNN distance
     cosine_similarity = True
+    # Set the number of neighbors to consider
+    n_neighbors = 3
 
     # Test the main pipeline with an image
     image_path = Path("raw_data/cover.jpg")
@@ -67,4 +73,17 @@ if __name__ == "__main__":
                                       curiosity,
                                       embeddings_file_path,
                                       dataset_path,
-                                      cosine_similarity)
+                                      cosine_similarity,
+                                      n_neighbors=n_neighbors)
+    print()
+    print(f"=== Input: {recommended_books['input_book']['title']} by {recommended_books['input_book']['authors']} ===")
+    print(f"=== {'Cosine Similarity' if cosine_similarity else 'KNN Distance'} ===")
+    print(f"=== Curiosity: {curiosity} ===")
+    print(f"=== Neighbors: {n_neighbors} ===")
+    print(":")
+    for reco in recommended_books["output_books"]:
+        print(f"Recommended Book: \n{reco['title']} by {reco['authors']}")
+        print()
+        print(f"Description: \n{reco['description']}")
+        print("---")
+        print()
