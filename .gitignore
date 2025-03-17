@@ -1,19 +1,18 @@
-# Raw data directory
-raw_data/
-notebooks/
+# Environment variables
 .env
-
-
-notebooks/
-
-# Model files
-*.npy
-
-# Python version file
-.python-version
 
 # Jupyter notebooks directory
 notebooks/
+
+# Raw data directory
+raw_data/
+
+# Model files
+models/camembert_models/*.npy
+models/yolo_models/*.pt
+
+# Python version file
+.python-version
 
 # Python cache directories
 *__pycache__/
