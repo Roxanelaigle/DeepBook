@@ -24,17 +24,17 @@ def recommend_books(database: pd.DataFrame,
     Output the top n_neighbors recommendations as a DataFrame.
     """
     if cosine_similarity:
-
         # Compute cosine similarities
         if 'embeddings' not in database.columns:
             raise KeyError("The 'embeddings' column is not present in the database DataFrame.")
+
         similarities = cosine_sim(np.vstack(database['embeddings'].values), input_embedding.reshape(1, -1))
         distances = 1 - similarities  # Convert similarities to distances
-        indices = np.argsort(distances.flatten())
+        indices = np.argsort(distances.flatten())  # Sorted indices
     else:
         distances, indices = knn_model.kneighbors(input_embedding.reshape(1, -1), n_neighbors=len(database))
 
-    total_books = len(distances[0])
+    total_books = len(database)
 
     # Compute the starting index based on curiosity
     if curiosity == 1:  # Top n_neighbors recommendations
@@ -50,9 +50,14 @@ def recommend_books(database: pd.DataFrame,
 
     # Make sure we don't exceed the dataset size
     end_index = min(start_index + n_neighbors, total_books)
+
     logger.info(f"Start index: {start_index}, End index: {end_index}")
-    # Select exactly n_neighbors books
-    recommended_indices = indices[start_index:end_index] if cosine_similarity else indices[0][start_index:end_index]
+    logger.info(f"N Neighbors: {n_neighbors}, Total Books: {total_books}")
+
+    # Fix slicing of indices
+    recommended_indices = indices[start_index:end_index].tolist() if cosine_similarity else indices[0][start_index:end_index]
+
+    logger.info(f"Start index: {start_index}; End index: {end_index}")  # Keeping your original log statement
 
     recommended_books = database.iloc[recommended_indices]
 
