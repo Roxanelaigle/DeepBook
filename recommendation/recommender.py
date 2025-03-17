@@ -39,12 +39,12 @@ def recommend_books(database: pd.DataFrame,
     # Compute the starting index based on curiosity
     if curiosity == 1:  # Top n_neighbors recommendations
         start_index = 0
-    elif curiosity == 2:  # Recommendations starting from 0.05%
-        start_index = min(int(0.0005 * total_books), total_books - 1)
-    elif curiosity == 3:  # Recommendations starting from 2%
-        start_index = min(int(0.01 * total_books), total_books - 1)
-    elif curiosity == 4:  # Recommendations starting from 5%
-        start_index = min(int(0.05 * total_books), total_books - 1)
+    elif curiosity == 2:  # Recommendations starting from 0.01%
+        start_index = min(int(0.01/100 * total_books), total_books - 1) # 3e voisin
+    elif curiosity == 3:  # Recommendations starting from 0.03%
+        start_index = min(int(0.03/100 * total_books), total_books - 1) #10e voisin
+    elif curiosity == 4:  # Recommendations starting from 0.1%
+        start_index = min(int(0.06/100 * total_books), total_books - 1) #20e voisin
     else:
         raise ValueError("Invalid curiosity level. Choose 1, 2, 3, or 4.")
 

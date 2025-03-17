@@ -50,19 +50,19 @@ def main_pipeline(input_book: Union[np.array, str],
 
 if __name__ == "__main__":
     # Set the curiosity level
-    curiosity = 1
+    curiosity = 4
     # Set the cosine similarity flag - cosine_similarity or KNN distance
     cosine_similarity = True
     # Set the number of neighbors to consider
     n_neighbors = 3
 
     # Test the main pipeline with an image
-    image_path = Path("raw_data/cover.jpg")
-    image = Image.open(image_path)
-    input_book = np.array(image)
+    # image_path = Path("raw_data/cover.jpg")
+    # image = Image.open(image_path)
+    # input_book = np.array(image)
 
-    # # Test the main pipeline with an ISBN 13
-    # input_book = "9782807906266"
+    # Test the main pipeline with an ISBN 13
+    input_book = "9782070643066"
 
     # # Test the main pipeline with an ISBN 10
     # input_book = "2807906265"
@@ -77,12 +77,15 @@ if __name__ == "__main__":
                                       n_neighbors=n_neighbors)
     print()
     print(f"=== Input: {recommended_books['input_book']['title']} by {recommended_books['input_book']['authors']} ===")
+    print(f"=== Input ISBN: {recommended_books['input_book']['isbn']} ===")
     print(f"=== {'Cosine Similarity' if cosine_similarity else 'KNN Distance'} ===")
     print(f"=== Curiosity: {curiosity} ===")
     print(f"=== Neighbors: {n_neighbors} ===")
     print(":")
     for reco in recommended_books["output_books"]:
         print(f"Recommended Book: \n{reco['title']} by {reco['authors']}")
+        print()
+        print(f"ISBN: {reco['isbn']}")
         print()
         print(f"Description: \n{reco['description']}")
         print("---")
