@@ -15,15 +15,22 @@ def main(input_book: Dict,
          model_dir: str,
          curiosity: int = 1,
          n_neighbors: int = 1,
-         cosine_similarity: int = False,
-         embeddings_sources: List[str] = ["titledesc"]) -> Dict:
+         cosine_similarity: bool = False,
+         embeddings_sources: List[str] = ["titledesc"],
+         alpha: float = 0.5) -> Dict:
     """
     Main script to load dataset, generate/load embeddings, fit KNN model, and recommend books.
 
     - Loads and prepares the dataset.
     - Loads or generates embeddings.
     - Fits a KNN model and recommends books.
+    - Alpha is the weight of the genre embeddings.
     """
+
+    if (len(embeddings_sources) != 1 and embeddings_sources == ["titledesc"])\
+        or (len(embeddings_sources) > 2 and embeddings_sources == ["titledesc", "genre"]):
+        raise ValueError('embeddings_sources should be 1 or 2 elements: ["titledesc"] or ["titledesc", "genre"]')
+
     logger.info("Loading dataset...")
     df = load_dataset(dataset_path)
     n_books = pd.read_csv(dataset_path).shape[0]
@@ -32,43 +39,57 @@ def main(input_book: Dict,
     logger.info("Preparing text features...")
     df = prepare_text_features(df)
     logger.success("Text features prepared successfully.")
-    embedding_source = embeddings_sources[0] # TODO: Handle two sources if needed
-    embeddings_file_path = Path(model_dir) / f"embeddings_camemBERT_{embedding_source}_{n_books}_books.npy"
-    try:
-        logger.info(f"🔎 Attempting to load precomputed embeddings from {embeddings_file_path}...")
-        embeddings = load_embeddings(model_dir, embedding_source, n_books)
-        logger.success("✅ Precomputed embeddings loaded successfully.")
-    except FileNotFoundError:
-        logger.warning(f"⏳ Precomputed embeddings not found at {embeddings_file_path}.")
-        logger.info(f"⏳ Generating new embeddings...")
-        embeddings = get_embeddings(df['combined_features'].tolist())
-        save_embeddings(embeddings, model_dir, embedding_source, n_books)
-        logger.success("💾 New embeddings generated and saved.")
 
-    df['embeddings'] = list(embeddings)
+    embeddings_dict = {}
+    for source in embeddings_sources:
+        embeddings_file_path = Path(model_dir) / f"embeddings_camemBERT_{source}_{n_books}_books.npy"
+        try:
+            logger.info(f"🔎 Attempting to load precomputed embeddings from {embeddings_file_path}...")
+            embeddings_dict[source] = load_embeddings(model_dir, source, n_books)
+            logger.success(f"✅ Precomputed embeddings for {source} loaded successfully.")
+        except FileNotFoundError:
+            logger.warning(f"❌ Precomputed embeddings not found at {embeddings_file_path}.")
+            logger.info(f"⏳ Generating new embeddings for {source}...")
+            embeddings = get_embeddings(df['combined_features'].tolist())
+            embeddings_dict[source] = embeddings
+            save_embeddings(embeddings, model_dir, source, n_books)
+            logger.success(f"💾 New embeddings for {source} generated and saved.")
 
-    logger.info("Fitting KNN model...")
-    knn_model = fit_knn(embeddings)
-    logger.success("KNN model fitted successfully.")
+    df['embeddings'] = list(embeddings_dict["titledesc"])
 
+    genre = "genre" in embeddings_sources
+    if genre:
+        df['embeddings_genre'] = list(embeddings_dict["genre"])
+
+    # Generate embeddings for the input book
     input_text = input_book['Title'] + " " + input_book['Description']
-    logger.info(f"Generating embedding for input book: {input_book['Title']}")
+    logger.info(f"Generating embeddings for input book: {input_book['Title']}")
     input_embedding = get_embeddings([input_text])[0]
-    logger.success("Input book embedding generated successfully.")
 
+    if genre:
+        input_genre_embedding = get_embeddings([input_book['Categories']])[0]
+        assert input_embedding.shape == input_genre_embedding.shape, "Embedding dimensions do not match!"
+        logger.success("✅ Input book embeddings generated for genre and title/description.")
+    else:
+        input_genre_embedding = None  # No genre embedding if not available
+        logger.warning("⚠️ Input book embeddings generated for title/description only.")
+
+    # Call `recommend_books` using separate embeddings
     logger.info("Generating recommendations...")
     recommended_books = recommend_books(
         df,
         input_embedding,
-        knn_model,
         book_genre=input_book['Categories'],
         curiosity=curiosity,
         n_neighbors=n_neighbors,
-        cosine_similarity=cosine_similarity
+        cosine_similarity=cosine_similarity,
+        genre_embedding=input_genre_embedding,  # Passing genre embedding separately
+        alpha=alpha
     )
 
-    logger.success("Recommendations generated successfully.")
-    logger.info(f"Recommended Book:\n{recommended_books}")
+    logger.success("✅ Recommendations generated successfully.")
+    logger.info(f"Recommended Books:\n{recommended_books}")
+
     result = {
         "input_book": {
             "title": input_book['Title'],
@@ -91,20 +112,18 @@ def main(input_book: Dict,
     return result
 
 
+
 if __name__ == "__main__":
-    embeddings_sources = ["titledesc"] # ["titledesc"] or ["titledesc", "genre"]
-    embedding_source = embeddings_sources[0] # TODO: Handle two sources if needed
-    curiosity = 3
+    embeddings_sources = ["titledesc", "genre"] # ["titledesc"] or ["titledesc", "genre"]
+    curiosity = 1
     n_neighbors = 3
     cosine_similarity = True
+    alpha = 0.2 # Adjust this to control genre influence
     dataset_path = Path("raw_data/VF_data_base_consolidate_clean.csv")
     model_dir = Path(f"models/camembert_models/")
 
     n_books = pd.read_csv(dataset_path).shape[0]
     logger.info(f"Dataset size determined: {n_books} books.")
-
-    # Look for the embeddings files on dataset length in the model directory
-    embeddings_file_path = Path(f"models/camembert_models/embeddings_camemBERT_{embedding_source}_{n_books}_books.npy")
 
     input_book = {
         'Title': "Sam et Cléo, c'est le monde à l'envers - Qu'est-ce qu'on dit, les parents ?",
@@ -133,7 +152,8 @@ if __name__ == "__main__":
                              curiosity,
                              n_neighbors,
                              cosine_similarity,
-                             embeddings_sources)
+                             embeddings_sources,
+                             alpha=alpha)
 
     print()
     print("Recommended Book:")
