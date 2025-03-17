@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from PIL import Image
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 from covers_to_text.main import picture_reader
 from gbooks_api.main import gbooks_lookup, gbooks_look_isbn
@@ -10,19 +10,21 @@ from recommendation.main import main as recommender
 
 def main_pipeline(input_book: Union[np.array, str],
                   curiosity: int,
-                  embeddings_file_path: str,
+                  model_dir: str,
                   dataset_path: str,
                   cosine_similarity: bool = False,
-                  n_neighbors: int = 1) -> Dict:
+                  n_neighbors: int = 1,
+                  embeddings_sources: List[str] = ["titledesc"]) -> Dict:
     """
     Main pipeline to recommend books based on an input book.
     Args:
         input_book: Either an image vector or an ISBN (10 or 13)
         curiosity: Number of books to recommend
-        embeddings_file_path: Path to the embeddings file
+        model_dir: Path to the model directory
         dataset_path: Path to the dataset
         cosine_similarity: Flag to use cosine similarity or KNN distance
         n_neighbors: Number of neighbors to consider in the KNN algorithm
+        embeddings_sources: List of sources for the embeddings, either ["titledesc"] or ["titledesc", "genre"]
 
     Returns:
         recommended_books: A dictionary containing the recommended books information
@@ -42,13 +44,15 @@ def main_pipeline(input_book: Union[np.array, str],
     # 3rd step: Recommend books based on the input book
     recommended_books: Dict = recommender(input_book,
                                           dataset_path,  # Path to the dataset
-                                          embeddings_file_path,  # Path to the embeddings file
+                                          model_dir,  # Path to the embeddings file
                                           curiosity,
-                                          cosine_similarity = cosine_similarity,
-                                          n_neighbors=n_neighbors)
+                                          cosine_similarity=cosine_similarity,
+                                          n_neighbors=n_neighbors,
+                                          embeddings_sources=embeddings_sources)
     return recommended_books
 
 if __name__ == "__main__":
+    embeddings_sources = ["titledesc"] # ["titledesc"] or ["titledesc", "genre"]
     # Set the curiosity level
     curiosity = 4
     # Set the cosine similarity flag - cosine_similarity or KNN distance
@@ -68,13 +72,14 @@ if __name__ == "__main__":
     # input_book = "2807906265"
     dataset_path = Path("raw_data/VF_data_base_consolidate_clean.csv")
     n_books = pd.read_csv(dataset_path).shape[0]
-    embeddings_file_path = Path(f"models/camembert_models/embeddings_camemBERT_{n_books}_books.npy")
+    model_dir = Path(f"models/camembert_models/")
     recommended_books = main_pipeline(input_book,
                                       curiosity,
-                                      embeddings_file_path,
+                                      model_dir,
                                       dataset_path,
                                       cosine_similarity,
-                                      n_neighbors=n_neighbors)
+                                      n_neighbors=n_neighbors,
+                                      embeddings_sources=embeddings_sources)
     print()
     print(f"=== Input: {recommended_books['input_book']['title']} by {recommended_books['input_book']['authors']} ===")
     print(f"=== Input ISBN: {recommended_books['input_book']['isbn']} ===")

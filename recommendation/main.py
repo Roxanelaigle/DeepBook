@@ -1,7 +1,7 @@
 import pandas as pd
 from loguru import logger
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from recommendation.save_load import load_embeddings, save_embeddings
 from recommendation.embeddings import get_embeddings
@@ -12,10 +12,11 @@ import json
 
 def main(input_book: Dict,
          dataset_path: str,
-         embeddings_file_path: str,
+         model_dir: str,
          curiosity: int = 1,
          n_neighbors: int = 1,
-         cosine_similarity: int = False) -> Dict:
+         cosine_similarity: int = False,
+         embeddings_sources: List[str] = ["titledesc"]) -> Dict:
     """
     Main script to load dataset, generate/load embeddings, fit KNN model, and recommend books.
 
@@ -25,20 +26,23 @@ def main(input_book: Dict,
     """
     logger.info("Loading dataset...")
     df = load_dataset(dataset_path)
-    logger.success(f"Dataset loaded successfully. Total records: {len(df)}")
+    n_books = pd.read_csv(dataset_path).shape[0]
+    logger.success(f"Dataset loaded successfully. Total records: {n_books}")
 
     logger.info("Preparing text features...")
     df = prepare_text_features(df)
     logger.success("Text features prepared successfully.")
-
+    embedding_source = embeddings_sources[0] # TODO: Handle two sources if needed
+    embeddings_file_path = Path(model_dir) / f"embeddings_camemBERT_{embedding_source}_{n_books}_books.npy"
     try:
         logger.info(f"🔎 Attempting to load precomputed embeddings from {embeddings_file_path}...")
-        embeddings = load_embeddings(embeddings_file_path)
+        embeddings = load_embeddings(model_dir, embedding_source, n_books)
         logger.success("✅ Precomputed embeddings loaded successfully.")
     except FileNotFoundError:
-        logger.warning(f"⏳ Precomputed embeddings not found at {embeddings_file_path}. Generating new embeddings...")
+        logger.warning(f"⏳ Precomputed embeddings not found at {embeddings_file_path}.")
+        logger.info(f"⏳ Generating new embeddings...")
         embeddings = get_embeddings(df['combined_features'].tolist())
-        save_embeddings(embeddings, Path(embeddings_file_path).parent, len(embeddings))
+        save_embeddings(embeddings, model_dir, embedding_source, n_books)
         logger.success("💾 New embeddings generated and saved.")
 
     df['embeddings'] = list(embeddings)
@@ -88,15 +92,19 @@ def main(input_book: Dict,
 
 
 if __name__ == "__main__":
+    embeddings_sources = ["titledesc"] # ["titledesc"] or ["titledesc", "genre"]
+    embedding_source = embeddings_sources[0] # TODO: Handle two sources if needed
     curiosity = 3
-    n_neighbors = 1
+    n_neighbors = 3
     cosine_similarity = True
     dataset_path = Path("raw_data/VF_data_base_consolidate_clean.csv")
+    model_dir = Path(f"models/camembert_models/")
 
     n_books = pd.read_csv(dataset_path).shape[0]
     logger.info(f"Dataset size determined: {n_books} books.")
 
-    embeddings_file_path = Path(f"models/camembert_models/embeddings_camemBERT_{n_books}_books.npy")
+    # Look for the embeddings files on dataset length in the model directory
+    embeddings_file_path = Path(f"models/camembert_models/embeddings_camemBERT_{embedding_source}_{n_books}_books.npy")
 
     input_book = {
         'Title': "Sam et Cléo, c'est le monde à l'envers - Qu'est-ce qu'on dit, les parents ?",
@@ -121,10 +129,11 @@ if __name__ == "__main__":
 
     recommended_books = main(input_book,
                              dataset_path,
-                             embeddings_file_path,
+                             model_dir,
                              curiosity,
                              n_neighbors,
-                             cosine_similarity)
+                             cosine_similarity,
+                             embeddings_sources)
 
     print()
     print("Recommended Book:")
