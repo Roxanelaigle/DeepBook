@@ -109,7 +109,7 @@ def gbooks_scrapper(
 
     # ✅ Iterative loop on each search key of the list provided
 
-    number_of_requests = 10     # maximum 400 results on a specific search, i.e., 10 requests of 40 results
+    number_of_requests = 5     # maximum 200 results on a specific search, i.e., 5 requests of 40 results
     max_results = 40
 
     for search_key in list_of_search_keys:
