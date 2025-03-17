@@ -14,50 +14,95 @@ def fit_knn(embeddings: np.ndarray, n_neighbors: int = 10) -> NearestNeighbors:
 
 def recommend_books(database: pd.DataFrame,
                     input_embedding: np.ndarray,
-                    knn_model: NearestNeighbors,
+                    knn_model: NearestNeighbors = None,
                     book_genre: str = None,
                     curiosity: int = 1,
                     n_neighbors: int = 1,
-                    cosine_similarity: bool = False) -> pd.DataFrame:
+                    cosine_similarity: bool = False,
+                    genre_embedding: np.ndarray = None,
+                    alpha: float = 0.5) -> pd.DataFrame:
     """
-    Recommend books based on the input embedding.
-    Output the top n_neighbors recommendations as a DataFrame.
-    """
-    if cosine_similarity:
-        # Compute cosine similarities
-        if 'embeddings' not in database.columns:
-            raise KeyError("The 'embeddings' column is not present in the database DataFrame.")
+    Recommend books based on title/description and genre embeddings.
+    - Uses either cosine similarity or KNN for recommendations.
+    - Alpha controls the weighting of title/description vs. genre similarities.
+    - Curiosity defines how far in the ranked list we start picking recommendations.
 
-        similarities = cosine_sim(np.vstack(database['embeddings'].values), input_embedding.reshape(1, -1))
-        distances = 1 - similarities  # Convert similarities to distances
-        indices = np.argsort(distances.flatten())  # Sorted indices
+    Args:
+        database: DataFrame containing book information and embeddings.
+        input_embedding: The embedding of the input book (title/description).
+        knn_model: Pre-trained KNN model (if used).
+        book_genre: The genre of the input book (optional).
+        curiosity: Defines how "far" into the ranked list we start recommendations (1-4).
+        n_neighbors: Number of recommendations to return.
+        cosine_similarity: Whether to use cosine similarity instead of KNN.
+        genre_embedding: The embedding for the genre information (if available).
+        alpha: Weighting factor (0 = only genre, 1 = only title/description).
+
+    Returns:
+        DataFrame with recommended books.
+    """
+    genre = genre_embedding is not None  # Check if genre embeddings are provided
+
+    if cosine_similarity:
+        # Ensure embeddings are available
+        if 'embeddings' not in database.columns:
+            raise KeyError("Missing 'embeddings' in database.")
+        if genre and 'embeddings_genre' not in database.columns:
+            raise KeyError("Missing 'embeddings_genre' in database.")
+
+        # Compute cosine similarities separately
+        similarities_titledesc = cosine_sim(
+            np.vstack(database['embeddings'].values),
+            input_embedding.reshape(1, -1)
+        )
+
+        similarities_genre = (cosine_sim(
+            np.vstack(database['embeddings_genre'].values),
+            genre_embedding.reshape(1, -1)
+        ) if genre else np.zeros_like(similarities_titledesc))
+
+        # Combine similarities with weighting factor alpha
+        similarities = alpha * similarities_titledesc + (1 - alpha) * similarities_genre
+
+        # Convert similarities into distances (1 - similarity) and sort
+        distances = 1 - similarities
+        sorted_indices = np.argsort(distances.flatten())
+
     else:
-        distances, indices = knn_model.kneighbors(input_embedding.reshape(1, -1), n_neighbors=len(database))
+        # Use KNN-based approach instead of cosine similarity
+        logger.info("Fitting KNN models separately for each embedding type...")
+
+        knn_titledesc = fit_knn(np.vstack(database['embeddings'].values), n_neighbors=len(database))
+        distances_titledesc, indices_titledesc = knn_titledesc.kneighbors(input_embedding.reshape(1, -1), n_neighbors=len(database))
+
+        if genre:
+            knn_genre = fit_knn(np.vstack(database['embeddings_genre'].values), n_neighbors=len(database))
+            distances_genre, indices_genre = knn_genre.kneighbors(genre_embedding.reshape(1, -1), n_neighbors=len(database))
+
+            # Merge distances with weight alpha
+            combined_scores = alpha * distances_titledesc + (1 - alpha) * distances_genre
+            sorted_indices = np.argsort(combined_scores.flatten())
+        else:
+            sorted_indices = indices_titledesc.flatten()
 
     total_books = len(database)
 
-    # Compute the starting index based on curiosity
-    if curiosity == 1:  # Top n_neighbors recommendations
+    # **Curiosity handling: defines the starting position in the ranked results**
+    if curiosity == 1:  # Top results (starting from rank 0)
         start_index = 0
-    elif curiosity == 2:  # Recommendations starting from 0.01%
-        start_index = min(int(0.01/100 * total_books), total_books - 1) # 3e voisin
-    elif curiosity == 3:  # Recommendations starting from 0.03%
-        start_index = min(int(0.03/100 * total_books), total_books - 1) #10e voisin
-    elif curiosity == 4:  # Recommendations starting from 0.1%
-        start_index = min(int(0.06/100 * total_books), total_books - 1) #20e voisin
+    elif curiosity == 2:  # Start at 0.01% of dataset
+        start_index = min(int(0.01 * total_books), total_books - 1)
+    elif curiosity == 3:  # Start at 0.03% of dataset
+        start_index = min(int(0.03 * total_books), total_books - 1)
+    elif curiosity == 4:  # Start at 0.06% of dataset
+        start_index = min(int(0.06 * total_books), total_books - 1)
     else:
-        raise ValueError("Invalid curiosity level. Choose 1, 2, 3, or 4.")
+        raise ValueError("Curiosity must be 1, 2, 3, or 4.")
 
-    # Make sure we don't exceed the dataset size
     end_index = min(start_index + n_neighbors, total_books)
 
-    logger.info(f"Start index: {start_index}, End index: {end_index}")
-    logger.info(f"N Neighbors: {n_neighbors}, Total Books: {total_books}")
-
-    # Fix slicing of indices
-    recommended_indices = indices[start_index:end_index].tolist() if cosine_similarity else indices[0][start_index:end_index]
-
-    logger.info(f"Start index: {start_index}; End index: {end_index}")  # Keeping your original log statement
+    # Select book indices based on curiosity range
+    recommended_indices = sorted_indices[start_index:end_index]
 
     recommended_books = database.iloc[recommended_indices]
 
