@@ -18,11 +18,13 @@ async def predict(request: Request):
 
     raw_data = await request.body()
     data=json.loads(raw_data)
+    photo_type = str(data['photo_type'])
     curiosity_level = int(data['curiosity_level'])
     print("curiosity_level : " + str(curiosity_level))
     if 'image_array' in data.keys() :
         image_array = np.array(data['image_array'], dtype=np.uint8)
         return main_pipeline(image_array,
+                             photo_type,
                              curiosity_level,
                              app.state.model_dir,
                              app.state.dataset_path,
@@ -33,6 +35,7 @@ async def predict(request: Request):
         isbn = data['isbn']
         print(isbn)
         return main_pipeline(isbn,
+                             photo_type,
                              curiosity_level,
                              app.state.model_dir,
                              app.state.dataset_path,

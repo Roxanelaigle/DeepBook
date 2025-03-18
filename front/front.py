@@ -39,7 +39,9 @@ if "proceed_to_step_2" not in st.session_state:
 # --- UPLOAD OR ENTER ISBN ---
 uploaded_file = None
 isbn = None
-photo_type = None  # ✅ nouvelle variable
+photo_type = None
+
+# ✅ nouvelle variable
 
 if option == '📷Take a photo':
     # ✅ Choix entre un livre ou plusieurs
@@ -47,8 +49,11 @@ if option == '📷Take a photo':
         "What type of photo are you uploading?",
         ('📖 A single book', '🏛️ Multiple books / Library')
     )
-    # Map front-end label to backend value
-    photo_type = "single" if photo_type_display == '📖 A single book' else "multiple"
+
+    if photo_type_display  == '📖 A single book':
+        photo_type = "single"
+    else :
+        photo_type = "multiple"
 
     # ✅ Création des colonnes
     col_left, col_right = st.columns([0.6, 0.4])  # Tu peux jouer sur la proportion
@@ -70,7 +75,7 @@ if option == '📷Take a photo':
 elif option == '📝Manually add ISBN':
     isbn_input = st.text_input('Enter the ISBN of the book')
     submit_isbn = st.button("✅ Validate ISBN")
-
+    photo_type = "isbn"
     if submit_isbn and isbn_input:
         st.session_state["isbn"] = isbn_input
         st.session_state["proceed_to_step_2"] = True
@@ -96,13 +101,14 @@ if st.session_state["proceed_to_step_2"]:
     if st.button('Start'):
         st.session_state["curiosity_level"] = curiosity_level
         st.session_state["option"] = option
+        st.session_state["photo_type"] = photo_type
 
         # API Call
         if option == '📷Take a photo' and uploaded_file is not None:
             payload = {"image_array": img_array_rgb.tolist(), "curiosity_level": curiosity_level, "photo_type" : photo_type}  # ✅ Ajout de photo_type
             response = requests.post(API_URL, json=payload)
         elif option == '📝Manually add ISBN' and "isbn" in st.session_state:
-            payload = {"isbn": st.session_state["isbn"], "curiosity_level": curiosity_level}
+            payload = {"isbn": st.session_state["isbn"], "curiosity_level": curiosity_level, "photo_type" : photo_type}
             response = requests.post(API_URL, json=payload)
         else:
             st.error("Please provide an image or an ISBN.")
@@ -115,7 +121,7 @@ if st.session_state["proceed_to_step_2"]:
             output_books = output_API.get("output_books", [])  # Taking only the first recommendation
 
             st.session_state["input_book"] = input_book
-            st.session_state["output_books"] = output_books # list
+            st.session_state["output_books"] = output_books
             st.session_state["page"] = "show_recommendation"
             st.rerun()
         else:
@@ -127,9 +133,11 @@ if st.session_state["proceed_to_step_2"]:
     # Show book recommendation immediately after clicking "Start"
     if "page" in st.session_state and st.session_state["page"] == "show_recommendation":
         input_book = st.session_state.get("input_book", {})
-        output_books = st.session_state.get("output_books", []) #
+        output_books = st.session_state.get("output_books", [])
+        option = st.session_state.get("option")
+        photo_type= st.session_state.get("photo_type")
 
-        if (st.session_state.get("option") == '📷Take a photo' and photo_type == "single") or option == '📝Manually add ISBN' :
+        if (option == '📷Take a photo' and photo_type == "single") or option == '📝Manually add ISBN' :
             st.markdown("#### You have uploaded the book... ")
             col1, col2 = st.columns([0.4, 0.6])
 
