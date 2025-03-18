@@ -19,7 +19,7 @@ def recommend_books(database: pd.DataFrame,
                     curiosity: int = 1,
                     n_neighbors: int = 1,
                     genre_embedding: np.ndarray = None,
-                    alpha: float = 0.1) -> pd.DataFrame:
+                    alpha: float = 0.9) -> pd.DataFrame:
     """
     Recommend books based on title/description and genre embeddings.
     - Uses either cosine similarity or KNN for recommendations.
@@ -71,11 +71,11 @@ def recommend_books(database: pd.DataFrame,
     if curiosity == 1:
         start_index = 0
     elif curiosity == 2:
-        start_index = min(int(0.01 * total_books), total_books - 1)
+        start_index = min(int(0.01/100 * total_books), total_books - 1)
     elif curiosity == 3:
-        start_index = min(int(0.03 * total_books), total_books - 1)
+        start_index = min(int(0.03/100 * total_books), total_books - 1)
     elif curiosity == 4:
-        start_index = min(int(0.06 * total_books), total_books - 1)
+        start_index = min(int(0.06/100 * total_books), total_books - 1)
     else:
         raise ValueError("Curiosity must be 1, 2, 3, or 4.")
 
