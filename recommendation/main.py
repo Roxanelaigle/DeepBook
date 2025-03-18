@@ -103,14 +103,13 @@ def main(input_book: Union[Dict, List[Dict]],
     logger.info(f"Recommended Books:\n{recommended_books}")
     # first fill result with the input book or books
     if isinstance(input_book, dict):
-        input_book_json = {"input_book": {
+        input_book_json = {
                 "title": input_book['Title'],
                 "authors": input_book['Authors'],
                 "image_link": input_book['Image Link'],
                 "isbn": input_book['ISBN-13'],
                 "description": input_book['Description']
             }
-        }
     else:
         input_book_json = [
             {
