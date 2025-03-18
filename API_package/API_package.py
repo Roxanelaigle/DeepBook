@@ -28,7 +28,7 @@ async def predict(request: Request):
                              app.state.dataset_path,
                              n_neighbors=3,
                              embeddings_sources=app.state.embeddings_sources,
-                             alpha=app.state.embeddings_sources)
+                             alpha=app.state.alpha)
     else :
         isbn = data['isbn']
         print(isbn)
@@ -38,4 +38,4 @@ async def predict(request: Request):
                              app.state.dataset_path,
                              n_neighbors=3,
                              embeddings_sources=app.state.embeddings_sources,
-                             alpha=app.state.embeddings_sources)
+                             alpha=app.state.alpha)

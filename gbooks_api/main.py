@@ -122,7 +122,7 @@ def gbooks_scrapper(
         for request in range(0, number_of_requests):
             start_index = request * max_results
             params = {
-                'q': f'{scrapping_type}:{search_key}+lang:fr', # Language restricted to French
+                'q': f'{search_key} lang:fr', # Language restricted to French
                 'key': api_key,
                 'orderBy': order_by,
                 'printType': "books",
