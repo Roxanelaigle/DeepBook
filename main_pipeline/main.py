@@ -60,7 +60,6 @@ def main_pipeline(input_book: Union[np.array, str],
         embeddings_sources=embeddings_sources,
         alpha=alpha  # Weight for genre/title balance
     )
-
     return recommended_books
 
 
@@ -73,7 +72,7 @@ if __name__ == "__main__":
     # Number of neighbors (books) to recommend
     n_neighbors = 3
     # Weighting factor for title/description vs. genre embeddings
-    alpha = 0.2  # Adjust this to control genre influence
+    alpha = 1  # Adjust this to control genre influence
 
     # Dataset path
     dataset_path = Path("raw_data/VF_data_base_consolidate_clean.csv")
