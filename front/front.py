@@ -129,21 +129,22 @@ if st.session_state["proceed_to_step_2"]:
         input_book = st.session_state.get("input_book", {})
         output_books = st.session_state.get("output_books", []) #
 
-        st.markdown("#### You have uploaded the book... ")
-        col1, col2 = st.columns([0.4, 0.6])
+        if (st.session_state.get("option") == '📷Take a photo' and photo_type == "single") or option == '📝Manually add ISBN' :
+            st.markdown("#### You have uploaded the book... ")
+            col1, col2 = st.columns([0.4, 0.6])
 
-        with col1:
-            url = input_book.get("image_link", "") + '&fife=w1080'
-            st.image(url, width=200)
+            with col1:
+                url = input_book.get("image_link", "") + '&fife=w1080'
+                st.image(url, width=200)
 
-        with col2:
-            st.write(f"**Title:** {input_book.get('title', 'Unknown')}")
-            st.write(f"**Author:** {input_book.get('authors', 'Unknown')}")
+            with col2:
+                st.write(f"**Title:** {input_book.get('title', 'Unknown')}")
+                st.write(f"**Author:** {input_book.get('authors', 'Unknown')}")
 
-            # Button 1: "Rerun - I did not upload the book" (Placed next to the sentence)
-            if st.button("Rerun - I did not upload the book"):
-                st.session_state.clear()
-                st.rerun()
+                # Button 1: "Rerun - I did not upload the book" (Placed next to the sentence)
+                if st.button("Rerun - I did not upload the book"):
+                    st.session_state.clear()
+                    st.rerun()
 
         st.markdown("### ✨ WE RECOMMEND YOU...", unsafe_allow_html=True)
 
