@@ -1,4 +1,4 @@
-FROM python:3.10.6-buster
+FROM python:3.10.6-bullseye
 
 RUN apt-get update && apt-get install -y build-essential libgl1-mesa-glx && rm -rf /var/lib/apt/lists/*
 
