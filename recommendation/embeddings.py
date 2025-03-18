@@ -1,6 +1,8 @@
 import numpy as np
+import pandas as pd
 import tensorflow as tf
-from typing import List
+from loguru import logger
+from typing import Dict, List, Literal
 from transformers import CamembertTokenizer, TFCamembertModel
 
 tokenizer = CamembertTokenizer.from_pretrained('camembert-base')
@@ -26,3 +28,20 @@ def get_embeddings(texts: List[str], batch_size: int = 32) -> np.ndarray:
             batch_emb = tf.reduce_mean(output.last_hidden_state, axis=1).numpy()
         embeddings.append(batch_emb)
     return np.vstack(embeddings)
+
+
+def get_input_embedding(input_book: Dict,
+                        df: pd.DataFrame,
+                        embedding_type: Literal["titledesc", "genre"] = "titledesc") -> np.ndarray:
+    """
+    Get the embedding for the input book. If the book is in the dataset, use the existing embedding.
+    Otherwise, generate a new embedding.
+    """
+    if df["ISBN-13"].str.contains(input_book["ISBN-13"]).any():
+        logger.info(f'Input book found in the dataset: {input_book["Title"]}')
+        input_embedding = df.loc[df["ISBN-13"] == input_book["ISBN-13"], "embeddings"].values[0] if embedding_type == "titledesc" else df.loc[df["ISBN-13"] == input_book["ISBN-13"], "embeddings_genre"].values[0]
+    else:
+        input_text = input_book["Title"] + " " + input_book["Description"]
+        logger.info(f'Generating embeddings for input book: {input_book["Title"]}')
+        input_embedding = get_embeddings([input_text])[0] if embedding_type == "titledesc" else get_embeddings([input_text])[0]
+    return input_embedding

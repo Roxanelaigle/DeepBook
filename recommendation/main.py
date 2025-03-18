@@ -4,11 +4,10 @@ from pathlib import Path
 from typing import Dict, List, Union
 
 from recommendation.save_load import load_embeddings, save_embeddings
-from recommendation.embeddings import get_embeddings
+from recommendation.embeddings import get_embeddings, get_input_embedding
 from recommendation.preprocessing import load_dataset, prepare_text_features
 from recommendation.recommender import recommend_books
 import json
-
 
 def main(input_book: Union[Dict, List[Dict]],
          dataset_path: str,
@@ -60,11 +59,9 @@ def main(input_book: Union[Dict, List[Dict]],
     if genre:
         df['embeddings_genre'] = list(embeddings_dict["genre"])
 
-    # Generate embeddings for the input book
+    # Get or generate embeddings for the input book or books
     if isinstance(input_book, dict):
-        input_text = input_book['Title'] + " " + input_book['Description']
-        logger.info(f"Generating embeddings for input book: {input_book['Title']}")
-        input_embedding = get_embeddings([input_text])[0]
+        input_embedding = get_input_embedding(input_book, df)
     elif isinstance(input_book, list): # If multiple books, generate barycenter
         # First, remove None values from the list and log how many were removed
         len_before = len(input_book)
@@ -73,7 +70,7 @@ def main(input_book: Union[Dict, List[Dict]],
         logger.info(f"Computing recommendations with the {len(input_book)} remaining books.")
         input_texts = [book['Title'] + " " + book['Description'] for book in input_book]
         logger.info(f"Generating embeddings for {len(input_book)} input books: {', '.join([book['Title'] for book in input_book])}")
-        input_embeddings = [get_embeddings([text])[0] for text in input_texts]
+        input_embeddings = [get_input_embedding(book, df) for book in input_book]
         # We get the mean of the embeddings for the multiple books
         input_embedding = sum(input_embeddings) / len(input_embeddings)
     else:
@@ -81,10 +78,9 @@ def main(input_book: Union[Dict, List[Dict]],
 
     if genre:
         if isinstance(input_book, dict):
-            input_genre_embedding = get_embeddings([input_book['Categories']])[0]
+            input_genre_embedding = get_input_embedding(input_book, df, embedding_type="genre")
         else: # If multiple books, generate barycenter
-            input_genre_texts = [book['Categories'] for book in input_book]
-            input_genre_embeddings = [get_embeddings([text])[0] for text in input_genre_texts]
+            input_genre_embeddings = [get_input_embedding(book, df, embedding_type="genre") for book in input_book]
             input_genre_embedding = sum(input_genre_embeddings) / len(input_genre_embeddings)
         assert input_embedding.shape == input_genre_embedding.shape, "Embedding dimensions do not match!"
         logger.success("✅ Input book embeddings generated for genre and title/description.")
