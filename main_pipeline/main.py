@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from PIL import Image
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Literal
 
-from covers_to_text.main import picture_reader
-from gbooks_api.main import gbooks_lookup, gbooks_look_isbn
+from covers_to_text.main import picture_reader, picture_reader_multibooks
+from gbooks_api.main import gbooks_lookup, gbooks_lookup_multibooks, gbooks_look_isbn
 from recommendation.main import main as recommender
 
 def main_pipeline(input_book: Union[np.array, str],
+                  photo_type: Literal["single", "multiple"],
                   curiosity: int,
                   model_dir: str,
                   dataset_path: str,
@@ -44,14 +45,23 @@ def main_pipeline(input_book: Union[np.array, str],
         raise ValueError("Input must be either an image vector (np.array) or an ISBN string")
 
     # Step 1: Extract text from image (if applicable)
-    extracted_words: str = picture_reader(input_book) if input_type == "image_vector" else input_book
-
-    # Step 2: Look up book details on Google Books
-    input_book: Dict = gbooks_lookup(extracted_words) if input_type == "image_vector" else gbooks_look_isbn(input_book)
+    if input_type == "image_vector":
+        if photo_type == "single":
+            extracted_words: List[str] = picture_reader(input_book)
+            # Step 2 (single book): Look up book details on Google Books
+            input_book: Dict = gbooks_lookup(extracted_words)
+        else:
+            # List of extracted words from multiple books
+            list_extracted_words: List[List[str]] = picture_reader_multibooks(input_book)
+            # Step 2 (multiple books): Look up book details on Google Books
+            input_book: List[Dict] = gbooks_lookup_multibooks(list_extracted_words)
+    else: # if ISBN
+        # Step 2: ISBN - Look up book details on Google Books
+        input_book = gbooks_look_isbn(input_book)
 
     # Step 3: Generate recommendations based on the input book
     recommended_books: Dict = recommender(
-        input_book,
+        input_book, # If multiple books, generate barycenter
         dataset_path,  # Path to the dataset
         model_dir,  # Path to the embeddings
         curiosity,
