@@ -13,7 +13,6 @@ def main_pipeline(input_book: Union[np.array, str],
                   curiosity: int,
                   model_dir: str,
                   dataset_path: str,
-                  cosine_similarity: bool = False,
                   n_neighbors: int = 1,
                   embeddings_sources: List[str] = ["titledesc"],
                   alpha: float = 0.5) -> Dict:
@@ -25,7 +24,6 @@ def main_pipeline(input_book: Union[np.array, str],
 		curiosity: Exploration level for recommendations (1-4)
 		model_dir: Path to the model directory
 		dataset_path: Path to the dataset
-		cosine_similarity: Use cosine similarity or KNN distance
 		n_neighbors: Number of similar books to recommend
 		embeddings_sources: List of embeddings sources, either ["titledesc"] or ["titledesc", "genre"]
 		alpha: Weight factor for title/description vs. genre similarity (0 = only genre, 1 = only title/description)
@@ -66,7 +64,6 @@ def main_pipeline(input_book: Union[np.array, str],
         model_dir,  # Path to the embeddings
         curiosity,
         n_neighbors=n_neighbors,
-        cosine_similarity=cosine_similarity,
         embeddings_sources=embeddings_sources,
         alpha=alpha  # Weight for genre/title balance
     )
@@ -77,8 +74,6 @@ if __name__ == "__main__":
     embeddings_sources = ["titledesc", "genre"]  # Available options: ["titledesc"], ["titledesc", "genre"]
     # Curiosity level for recommendation
     curiosity = 1
-    # Use cosine similarity (True) or KNN distance (False)
-    cosine_similarity = True
     # Number of neighbors (books) to recommend
     n_neighbors = 3
     # Weighting factor for title/description vs. genre embeddings
@@ -93,17 +88,18 @@ if __name__ == "__main__":
     # input_book = "9782070643066"
 
     # Alternative: Use an image input (uncomment to test)
-    image_path = Path("raw_data/cover.jpg")
+    image_path = Path("raw_data/image.png")
+    photo_type = "multiple" # "multiple" or "single"
     image = Image.open(image_path)
     input_book = np.array(image)
 
     # Run the recommendation pipeline
     recommended_books = main_pipeline(
         input_book,
+        photo_type,
         curiosity,
         model_dir,
         dataset_path,
-        cosine_similarity,
         n_neighbors=n_neighbors,
         embeddings_sources=embeddings_sources,
         alpha=alpha
@@ -111,9 +107,11 @@ if __name__ == "__main__":
 
     # Display results
     print()
-    print(f"=== Input: {recommended_books['input_book']['title']} by {recommended_books['input_book']['authors']} ===")
-    print(f"=== Input ISBN: {recommended_books['input_book']['isbn']} ===")
-    print(f"=== {'Cosine Similarity' if cosine_similarity else 'KNN Distance'} ===")
+    if photo_type == "single":
+        print(f"=== Input: {recommended_books['input_book']['title']} by {recommended_books['input_book']['authors']} ===")
+        print(f"=== Input ISBN: {recommended_books['input_book']['isbn']} ===")
+    else:
+        print(f"=== Input: Multiple books - {len(recommended_books['input_book'])} books ===")
     print(f"=== Curiosity: {curiosity} ===")
     print(f"=== Neighbors: {n_neighbors} ===")
     print(":")
