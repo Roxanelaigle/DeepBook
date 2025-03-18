@@ -86,14 +86,15 @@ if __name__ == "__main__":
     model_dir = Path(f"models/camembert_models/")
 
     # Example: Use an ISBN (10 or 13) as input
-    input_book = "9782070643066"
-    photo_type = "isbn" # "isbn" if input is not an image but an ISBN
+    # input_book = "9782070643066"
+    # photo_type = "isbn" # "isbn" if input is not an image but an ISBN
 
-    # # Alternative: Use an image input (uncomment to test)
-    # image_path = Path("raw_data/image.png")
-    # photo_type = "multiple" # "multiple" or "single"
-    # image = Image.open(image_path)
-    # input_book = np.array(image)
+    # Alternative: Use an image input (uncomment to test)
+    image_path = Path("raw_data/cover.jpg")
+    photo_type = "single" # "multiple" or "single"
+    image = Image.open(image_path)
+    input_book = np.array(image)
+
 
     # Run the recommendation pipeline
     recommended_books = main_pipeline(
@@ -108,6 +109,7 @@ if __name__ == "__main__":
     )
 
     # Display results
+    print(recommended_books)
     print()
     if photo_type == "single":
         print(f"=== Input: {recommended_books['input_book']['title']} by {recommended_books['input_book']['authors']} ===")

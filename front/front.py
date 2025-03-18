@@ -142,8 +142,11 @@ if st.session_state["proceed_to_step_2"]:
             col1, col2 = st.columns([0.4, 0.6])
 
             with col1:
-                url = input_book.get("image_link", "") + '&fife=w1080'
-                st.image(url, width=200)
+                if input_book.get("image_link", "") != "Non disponible" :
+                    url = input_book.get("image_link", "") + '&fife=w1080'
+                    st.image(url, width=200)
+                else :
+                    pass
 
             with col2:
                 st.write(f"**Title:** {input_book.get('title', 'Unknown')}")
