@@ -16,11 +16,8 @@ def fit_knn(embeddings: np.ndarray, n_neighbors: int = 10) -> NearestNeighbors:
 
 def recommend_books(database: pd.DataFrame,
                     input_embedding: np.ndarray,
-                    knn_model: NearestNeighbors = None,
-                    book_genre: str = None,
                     curiosity: int = 1,
                     n_neighbors: int = 1,
-                    cosine_similarity: bool = False,
                     genre_embedding: np.ndarray = None,
                     alpha: float = 0.1) -> pd.DataFrame:
     """
@@ -33,10 +30,8 @@ def recommend_books(database: pd.DataFrame,
         database: DataFrame containing book information and embeddings.
         input_embedding: The embedding of the input book (title/description).
         knn_model: Pre-trained KNN model (if used).
-        book_genre: The genre of the input book (optional).
         curiosity: Defines how "far" into the ranked list we start recommendations (1-4).
         n_neighbors: Number of recommendations to return.
-        cosine_similarity: Whether to use cosine similarity instead of KNN.
         genre_embedding: The embedding for the genre information (if available).
         alpha: Weighting factor (0 = only genre, 1 = only title/description).
 

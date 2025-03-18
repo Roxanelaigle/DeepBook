@@ -1,21 +1,20 @@
 import pandas as pd
 from loguru import logger
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from recommendation.save_load import load_embeddings, save_embeddings
 from recommendation.embeddings import get_embeddings
 from recommendation.preprocessing import load_dataset, prepare_text_features
-from recommendation.recommender import fit_knn, recommend_books
+from recommendation.recommender import recommend_books
 import json
 
 
-def main(input_book: Dict,
+def main(input_book: Union[Dict, List[Dict]],
          dataset_path: str,
          model_dir: str,
          curiosity: int = 1,
          n_neighbors: int = 1,
-         cosine_similarity: bool = False,
          embeddings_sources: List[str] = ["titledesc"],
          alpha: float = 0.5) -> Dict:
     """
@@ -62,12 +61,26 @@ def main(input_book: Dict,
         df['embeddings_genre'] = list(embeddings_dict["genre"])
 
     # Generate embeddings for the input book
-    input_text = input_book['Title'] + " " + input_book['Description']
-    logger.info(f"Generating embeddings for input book: {input_book['Title']}")
-    input_embedding = get_embeddings([input_text])[0]
+    if isinstance(input_book, dict):
+        input_text = input_book['Title'] + " " + input_book['Description']
+        logger.info(f"Generating embeddings for input book: {input_book['Title']}")
+        input_embedding = get_embeddings([input_text])[0]
+    elif isinstance(input_book, list): # If multiple books, generate barycenter
+        input_texts = [book['Title'] + " " + book['Description'] for book in input_book]
+        logger.info(f"Generating embeddings for multiple input books: {', '.join([book['Title'] for book in input_book])}")
+        input_embeddings = [get_embeddings([text])[0] for text in input_texts]
+        # We get the mean of the embeddings for the multiple books
+        input_embedding = sum(input_embeddings) / len(input_embeddings)
+    else:
+        raise ValueError("Input must be a dictionary or a list of dictionaries")
 
     if genre:
-        input_genre_embedding = get_embeddings([input_book['Categories']])[0]
+        if isinstance(input_book, dict):
+            input_genre_embedding = get_embeddings([input_book['Categories']])[0]
+        else: # If multiple books, generate barycenter
+            input_genre_texts = [book['Categories'] for book in input_book]
+            input_genre_embeddings = [get_embeddings([text])[0] for text in input_genre_texts]
+            input_genre_embedding = sum(input_genre_embeddings) / len(input_genre_embeddings)
         assert input_embedding.shape == input_genre_embedding.shape, "Embedding dimensions do not match!"
         logger.success("✅ Input book embeddings generated for genre and title/description.")
     else:
@@ -79,25 +92,37 @@ def main(input_book: Dict,
     recommended_books = recommend_books(
         df,
         input_embedding,
-        book_genre=input_book['Categories'],
         curiosity=curiosity,
         n_neighbors=n_neighbors,
-        cosine_similarity=cosine_similarity,
         genre_embedding=input_genre_embedding,  # Passing genre embedding separately
         alpha=alpha
     )
 
     logger.success("✅ Recommendations generated successfully.")
     logger.info(f"Recommended Books:\n{recommended_books}")
+    # first fill result with the input book or books
+    if isinstance(input_book, dict):
+        result = {"input_book": {
+                "title": input_book['Title'],
+                "authors": input_book['Authors'],
+                "image_link": input_book['Image Link'],
+                "isbn": input_book['ISBN-13'],
+                "description": input_book['Description']
+            }
+        }
+    else:
+        input_book_json = [
+            {
+                "title": book['Title'],
+                "authors": book['Authors'],
+                "image_link": book['Image Link'],
+                "isbn": book['ISBN-13'],
+                "description": book['Description']
+            } for book in input_book
+        ]
 
     result = {
-        "input_book": {
-            "title": input_book['Title'],
-            "authors": input_book['Authors'],
-            "image_link": input_book['Image Link'],
-            "isbn": input_book['ISBN-13'],
-            "description": input_book['Description']
-        },
+        "input_book": input_book_json,
         "output_books": [
             {
                 "title": book['Title'],
@@ -117,7 +142,6 @@ if __name__ == "__main__":
     embeddings_sources = ["titledesc", "genre"] # ["titledesc"] or ["titledesc", "genre"]
     curiosity = 1
     n_neighbors = 3
-    cosine_similarity = True
     alpha = 0.2 # Adjust this to control genre influence
     dataset_path = Path("raw_data/VF_data_base_consolidate_clean.csv")
     model_dir = Path(f"models/camembert_models/")
@@ -151,7 +175,6 @@ if __name__ == "__main__":
                              model_dir,
                              curiosity,
                              n_neighbors,
-                             cosine_similarity,
                              embeddings_sources,
                              alpha=alpha)
 

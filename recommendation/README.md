@@ -88,7 +88,6 @@ The **curiosity gauge** lets users explore books **beyond the top-ranked recomme
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `cosine_similarity` | Use cosine similarity (`True`) or KNN (`False`) | `True` |
 | `n_neighbors` | Number of books to recommend | `3` |
 | `alpha` | Weight of **title/description** vs. **genre** (0 = genre more important, 1 = genre not important) | `0.1` |
 | `curiosity` | Explore deeper recommendations (`1-4`) | `1` |
