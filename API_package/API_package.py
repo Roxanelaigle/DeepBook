@@ -7,7 +7,7 @@ import pandas as pd
 from pathlib import Path
 
 app = FastAPI()
-app.state.alpha = 0.1
+app.state.alpha = 0.9
 app.state.embeddings_sources = ["titledesc", "genre"]
 app.state.dataset_path = Path("raw_data/VF_data_base_consolidate_clean.csv")
 app.state.n_books = pd.read_csv(app.state.dataset_path).shape[0]
