@@ -137,8 +137,8 @@ if st.session_state["proceed_to_step_2"]:
         option = st.session_state.get("option")
         photo_type= st.session_state.get("photo_type")
 
-        if (option == '📷Take a photo' and photo_type == "single") or option == '📝Manually add ISBN' :
-            st.markdown("#### You have uploaded the book... ")
+        if (option == '📷Prendre une photo' and photo_type == "single") or option == '📝Ajouter manuellement un ISBN' :
+            st.markdown("#### Vous avez téléchargé le livre... ")
             col1, col2 = st.columns([0.4, 0.6])
 
             with col1:
@@ -153,7 +153,7 @@ if st.session_state["proceed_to_step_2"]:
                 st.write(f"**Author:** {input_book.get('authors', 'Unknown')}")
 
                 # Button 1: "Rerun - I did not upload the book" (Placed next to the sentence)
-                if st.button("Rerun - I did not upload the book"):
+                if st.button("Relancer - Ce n'est pas le bon livre"):
                     st.session_state.clear()
                     st.rerun()
 
