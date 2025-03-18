@@ -66,6 +66,7 @@ def main(input_book: Union[Dict, List[Dict]],
         logger.info(f"Generating embeddings for input book: {input_book['Title']}")
         input_embedding = get_embeddings([input_text])[0]
     elif isinstance(input_book, list): # If multiple books, generate barycenter
+        logger.error(input_book)
         input_texts = [book['Title'] + " " + book['Description'] for book in input_book]
         logger.info(f"Generating embeddings for multiple input books: {', '.join([book['Title'] for book in input_book])}")
         input_embeddings = [get_embeddings([text])[0] for text in input_texts]
@@ -102,7 +103,7 @@ def main(input_book: Union[Dict, List[Dict]],
     logger.info(f"Recommended Books:\n{recommended_books}")
     # first fill result with the input book or books
     if isinstance(input_book, dict):
-        result = {"input_book": {
+        input_book_json = {"input_book": {
                 "title": input_book['Title'],
                 "authors": input_book['Authors'],
                 "image_link": input_book['Image Link'],
