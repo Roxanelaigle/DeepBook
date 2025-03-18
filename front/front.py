@@ -15,7 +15,7 @@ with col2:
     st.markdown(
         """
         <div style='display: flex; flex-direction: column; justify-content: center; height: 100%;'>
-            <h1 style='color:#2B6CB0; font-size: 36px; margin: 0;'>Life’s too short to read only what’s expected.</h1>
+            <h1 style='color:#2B6CB0; font-size: 36px; margin: 0;'>La vie est trop courte pour lire seulement ce qu’on attend de vous.</h1>
         """,
         unsafe_allow_html=True
     )
@@ -25,13 +25,13 @@ with col2:
 # --- SECTION 1️⃣ INTRO ---
 st.markdown(
     """
-    ### 1️⃣ **SCAN YOUR BOOKS**
+    ### 1️⃣ **SCANNEZ VOS LIVRES**
     """,
     unsafe_allow_html=True
 )
 
 # Option to take a photo or manually add ISBN
-option = st.selectbox('How would you like to provide the book information?', ('📷Take a photo', '📝Manually add ISBN'))
+option = st.selectbox('Comment souhaitez-vous fournir les informations ?', ('📷Prendre une photo', '📝Ajouter manuellement un ISBN'))
 # Initialisation session state pour proceed_to_step_2
 if "proceed_to_step_2" not in st.session_state:
     st.session_state["proceed_to_step_2"] = False
@@ -43,14 +43,14 @@ photo_type = None
 
 # ✅ nouvelle variable
 
-if option == '📷Take a photo':
+if option == '📷Prendre une photo':
     # ✅ Choix entre un livre ou plusieurs
     photo_type_display = st.selectbox(
-        "What type of photo are you uploading?",
-        ('📖 A single book', '🏛️ Multiple books / Library')
+        "Quel type de photo souhaitez-vous importer ?",
+        ('📖 Un seul livre', '🏛️ Plusieurs livres / Bibliothèque')
     )
 
-    if photo_type_display  == '📖 A single book':
+    if photo_type_display  == '📖 Un seul livre':
         photo_type = "single"
     else :
         photo_type = "multiple"
@@ -59,12 +59,12 @@ if option == '📷Take a photo':
     col_left, col_right = st.columns([0.6, 0.4])  # Tu peux jouer sur la proportion
 
     with col_left:
-        uploaded_file = st.file_uploader("Upload a photo of your book", type=["jpg", "jpeg", "png"])
+        uploaded_file = st.file_uploader("Téléchargez une photo de votre livre", type=["jpg", "jpeg", "png"])
 
     with col_right:
         if uploaded_file is not None:
             st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
-            st.image(uploaded_file, caption='Uploaded Image.', width=150)
+            st.image(uploaded_file, caption='Image téléchargée.', width=150)
             st.markdown("</div>", unsafe_allow_html=True)
 
     if uploaded_file is not None:
@@ -72,9 +72,9 @@ if option == '📷Take a photo':
         img_array_rgb = np.array(image)  # Convert image to NumPy array
         st.session_state["proceed_to_step_2"] = True  # ✅ Active dans le bon cas !
 
-elif option == '📝Manually add ISBN':
-    isbn_input = st.text_input('Enter the ISBN of the book')
-    submit_isbn = st.button("✅ Validate ISBN")
+elif option == '📝Ajouter manuellement un ISBN':
+    isbn_input = st.text_input("Entrez l'ISBN du livre")
+    submit_isbn = st.button("✅ Valider l'ISBN")
     photo_type = "isbn"
     if submit_isbn and isbn_input:
         st.session_state["isbn"] = isbn_input
@@ -84,12 +84,12 @@ if st.session_state["proceed_to_step_2"]:
 
     st.markdown(
         """
-        ### 2️⃣ DARE TO BE SURPRISED
+        ### 2️⃣ EXPLOREZ DE NOUVEAUX HORIZONS
         """,
         unsafe_allow_html=True
     )
     curiosity_level = st.slider(
-        "How curious are you?",
+        "A quel point êtes vous curieux ?",
         min_value=1,
         max_value=4,
         value=1
@@ -98,20 +98,20 @@ if st.session_state["proceed_to_step_2"]:
 
     API_URL = "http://127.0.0.1:8000" # needs to be changed based on API!!
 
-    if st.button('Start'):
+    if st.button('Démarrer'):
         st.session_state["curiosity_level"] = curiosity_level
         st.session_state["option"] = option
         st.session_state["photo_type"] = photo_type
 
         # API Call
-        if option == '📷Take a photo' and uploaded_file is not None:
+        if option == '📷Prendre une photo' and uploaded_file is not None:
             payload = {"image_array": img_array_rgb.tolist(), "curiosity_level": curiosity_level, "photo_type" : photo_type}  # ✅ Ajout de photo_type
             response = requests.post(API_URL, json=payload)
-        elif option == '📝Manually add ISBN' and "isbn" in st.session_state:
+        elif option == '📝Ajouter manuellement un ISBN' and "isbn" in st.session_state:
             payload = {"isbn": st.session_state["isbn"], "curiosity_level": curiosity_level, "photo_type" : photo_type}
             response = requests.post(API_URL, json=payload)
         else:
-            st.error("Please provide an image or an ISBN.")
+            st.error("Veuillez fournir une image ou un ISBN")
             st.stop()
 
         # Process API Response
@@ -157,7 +157,7 @@ if st.session_state["proceed_to_step_2"]:
                     st.session_state.clear()
                     st.rerun()
 
-        st.markdown("### ✨ WE RECOMMEND YOU...", unsafe_allow_html=True)
+        st.markdown("### ✨ NOUS VOUS RECOMMANDONS...", unsafe_allow_html=True)
 
         # ✅ Création de 3 colonnes
         col1, col2, col3 = st.columns(3)
