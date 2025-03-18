@@ -66,9 +66,13 @@ def main(input_book: Union[Dict, List[Dict]],
         logger.info(f"Generating embeddings for input book: {input_book['Title']}")
         input_embedding = get_embeddings([input_text])[0]
     elif isinstance(input_book, list): # If multiple books, generate barycenter
-        logger.error(input_book)
+        # First, remove None values from the list and log how many were removed
+        len_before = len(input_book)
+        input_book = [book for book in input_book if book is not None]
+        logger.warning(f"⚠️ {len_before - len(input_book)} books were not found.")
+        logger.info(f"Computing recommendations with the {len(input_book)} remaining books.")
         input_texts = [book['Title'] + " " + book['Description'] for book in input_book]
-        logger.info(f"Generating embeddings for multiple input books: {', '.join([book['Title'] for book in input_book])}")
+        logger.info(f"Generating embeddings for {len(input_book)} input books: {', '.join([book['Title'] for book in input_book])}")
         input_embeddings = [get_embeddings([text])[0] for text in input_texts]
         # We get the mean of the embeddings for the multiple books
         input_embedding = sum(input_embeddings) / len(input_embeddings)
