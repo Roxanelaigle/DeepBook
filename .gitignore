@@ -22,3 +22,17 @@ models/yolo_models/*.pt
 # Windows Zone Identifier and macOS Finder metadata files
 *:Zone.Identifier
 .DS_Store
+
+
+
+# Ignore old dumps and test files
+ol_dump_authors_*.csv
+ol_dump_authors_*.txt
+old_files/
+test.py
+test_notebook.ipynb
+book_api_check.ipynb
+scrapping.ipynb
+leboncoin_covers/
+tmp_chunk.csv
+*.ipynb
