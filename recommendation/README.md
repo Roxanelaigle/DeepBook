@@ -3,10 +3,11 @@
 This repository implements a **book recommendation system** using **CamemBERT embeddings** and a **hybrid search approach** (cosine similarity or k-Nearest Neighbors). The system incorporates **genre embeddings** and a **curiosity gauge** to fine-tune recommendations.
 
 ## Features
-- **Uses embeddings** for book titles, descriptions, and optionally, genres.
+- **Uses embeddings** for book titles and descriptions combined, and genres.
 - **Supports two recommendation methods**:
   - **Cosine Similarity**: Measures the similarity between books.
   - **k-Nearest Neighbors (KNN)**: Finds the most similar books in the dataset.
+- **Robust Scaling**: Ensures balanced contribution from title/description and genre embeddings.
 - **Curiosity Gauge**: Allows exploration of results beyond top-ranked books.
 - **Weighted Combination (`alpha`)**: Balances importance between title/description and genre embeddings.
 
@@ -26,30 +27,30 @@ For an input book:
 ### **2. Computing Similarities**
 Two methods are available:
 
-#### **A) Cosine Similarity**
-- We compute **separate similarities**:
+#### **A) Cosine Similarity (with Robust Scaling)**
+- We compute **separate cosine similarities**:
 
 ```math
-similarity_{title} = \cos(dataset\_embedding_{titledesc}, input\_embedding_{titledesc})
+similarity_{titledesc} = \cos(dataset\_embedding_{titledesc}, input\_embedding_{titledesc})
 ```
-
----
 
 ```math
 similarity_{genre} = \cos(dataset\_embedding_{genre}, input\_embedding_{genre})
 ```
 
+- To ensure balanced influence from each embedding type, we apply **Min-Max Scaling** separately to both sets of similarities, bringing them into a consistent `[0,1]` range:
+
+```math
+scaled\_similarity = \frac{similarity - similarity_{min}}{similarity_{max} - similarity_{min}}
+```
+
 - The final similarity score is a **weighted combination**:
 
 ```math
-similarity = \alpha \cdot similarity_{titledesc} + (1 - \alpha) \cdot similarity_{genre} $$
+similarity = \alpha \cdot scaled\_similarity_{titledesc} + (1 - \alpha) \cdot scaled\_similarity_{genre}
 ```
 
 - Books are ranked based on **1 - similarity** (lower is better).
-
-```math
-similarity = \alpha \cdot similarity_{titledesc} + (1 - \alpha) \cdot similarity_{genre}
-```
 
 #### **B) k-Nearest Neighbors (KNN)**
 - We train separate **KNN models** for **title/description** and **genre**.
@@ -57,7 +58,7 @@ similarity = \alpha \cdot similarity_{titledesc} + (1 - \alpha) \cdot similarity
 - The distances are combined as:
 
 ```math
-distance = \alpha \cdot distance_{title} + (1 - \alpha) \cdot distance_{genre}
+distance = \alpha \cdot distance_{titledesc} + (1 - \alpha) \cdot distance_{genre}
 ```
 
 - Books are ranked based on **distance** (lower is better).
@@ -89,5 +90,5 @@ The **curiosity gauge** lets users explore books **beyond the top-ranked recomme
 |-----------|-------------|---------|
 | `cosine_similarity` | Use cosine similarity (`True`) or KNN (`False`) | `True` |
 | `n_neighbors` | Number of books to recommend | `3` |
-| `alpha` | Weight of **title/description** vs. **genre** (0 = only genre, 1 = only title) | `0.5` |
+| `alpha` | Weight of **title/description** vs. **genre** (0 = genre more important, 1 = genre not important) | `0.1` |
 | `curiosity` | Explore deeper recommendations (`1-4`) | `1` |

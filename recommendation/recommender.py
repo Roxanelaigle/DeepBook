@@ -1,16 +1,18 @@
 import numpy as np
 import pandas as pd
-from loguru import logger
 from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics.pairwise import cosine_similarity as cosine_sim
+from sklearn.preprocessing import normalize, MinMaxScaler
+
 
 def fit_knn(embeddings: np.ndarray, n_neighbors: int = 10) -> NearestNeighbors:
-    """"
+    """
     Fit a KNN model to the embeddings.
     """
     knn = NearestNeighbors(n_neighbors=n_neighbors, metric='euclidean')
     knn.fit(embeddings)
     return knn
+
 
 def recommend_books(database: pd.DataFrame,
                     input_embedding: np.ndarray,
@@ -20,7 +22,7 @@ def recommend_books(database: pd.DataFrame,
                     n_neighbors: int = 1,
                     cosine_similarity: bool = False,
                     genre_embedding: np.ndarray = None,
-                    alpha: float = 0.5) -> pd.DataFrame:
+                    alpha: float = 0.1) -> pd.DataFrame:
     """
     Recommend books based on title/description and genre embeddings.
     - Uses either cosine similarity or KNN for recommendations.
@@ -41,67 +43,49 @@ def recommend_books(database: pd.DataFrame,
     Returns:
         DataFrame with recommended books.
     """
-    genre = genre_embedding is not None  # Check if genre embeddings are provided
+    genre = genre_embedding is not None
 
-    if cosine_similarity:
-        # Ensure embeddings are available
-        if 'embeddings' not in database.columns:
-            raise KeyError("Missing 'embeddings' in database.")
-        if genre and 'embeddings_genre' not in database.columns:
-            raise KeyError("Missing 'embeddings_genre' in database.")
+    # Normalize embeddings
+    db_embeddings_norm = normalize(np.vstack(database['embeddings'].values))
+    input_embedding_norm = normalize(input_embedding.reshape(1, -1))
 
-        # Compute cosine similarities separately
-        similarities_titledesc = cosine_sim(
-            np.vstack(database['embeddings'].values),
-            input_embedding.reshape(1, -1)
-        )
+    similarities_titledesc = cosine_sim(db_embeddings_norm, input_embedding_norm).flatten()
 
-        similarities_genre = (cosine_sim(
-            np.vstack(database['embeddings_genre'].values),
-            genre_embedding.reshape(1, -1)
-        ) if genre else np.zeros_like(similarities_titledesc))
-
-        # Combine similarities with weighting factor alpha
-        similarities = alpha * similarities_titledesc + (1 - alpha) * similarities_genre
-
-        # Convert similarities into distances (1 - similarity) and sort
-        distances = 1 - similarities
-        sorted_indices = np.argsort(distances.flatten())
-
+    if genre:
+        db_genre_embeddings_norm = normalize(np.vstack(database['embeddings_genre'].values))
+        genre_embedding_norm = normalize(genre_embedding.reshape(1, -1))
+        similarities_genre = cosine_sim(db_genre_embeddings_norm, genre_embedding_norm).flatten()
     else:
-        # Use KNN-based approach instead of cosine similarity
-        logger.info("Fitting KNN models separately for each embedding type...")
+        similarities_genre = np.zeros_like(similarities_titledesc)
 
-        knn_titledesc = fit_knn(np.vstack(database['embeddings'].values), n_neighbors=len(database))
-        distances_titledesc, indices_titledesc = knn_titledesc.kneighbors(input_embedding.reshape(1, -1), n_neighbors=len(database))
+    # Min-Max Scaling of similarities
+    scaler = MinMaxScaler()
+    similarities_titledesc_scaled = scaler.fit_transform(similarities_titledesc.reshape(-1, 1)).flatten()
+    similarities_genre_scaled = scaler.fit_transform(similarities_genre.reshape(-1, 1)).flatten()
 
-        if genre:
-            knn_genre = fit_knn(np.vstack(database['embeddings_genre'].values), n_neighbors=len(database))
-            distances_genre, indices_genre = knn_genre.kneighbors(genre_embedding.reshape(1, -1), n_neighbors=len(database))
+    # Combine scaled similarities with alpha weighting
+    combined_similarities = alpha * similarities_titledesc_scaled + (1 - alpha) * similarities_genre_scaled
 
-            # Merge distances with weight alpha
-            combined_scores = alpha * distances_titledesc + (1 - alpha) * distances_genre
-            sorted_indices = np.argsort(combined_scores.flatten())
-        else:
-            sorted_indices = indices_titledesc.flatten()
+    # Convert similarities to distances (1 - similarity)
+    distances = 1 - combined_similarities
+    sorted_indices = np.argsort(distances)
 
     total_books = len(database)
 
-    # **Curiosity handling: defines the starting position in the ranked results**
-    if curiosity == 1:  # Top results (starting from rank 0)
+    # Curiosity handling
+    if curiosity == 1:
         start_index = 0
-    elif curiosity == 2:  # Start at 0.01% of dataset
+    elif curiosity == 2:
         start_index = min(int(0.01 * total_books), total_books - 1)
-    elif curiosity == 3:  # Start at 0.03% of dataset
+    elif curiosity == 3:
         start_index = min(int(0.03 * total_books), total_books - 1)
-    elif curiosity == 4:  # Start at 0.06% of dataset
+    elif curiosity == 4:
         start_index = min(int(0.06 * total_books), total_books - 1)
     else:
         raise ValueError("Curiosity must be 1, 2, 3, or 4.")
 
     end_index = min(start_index + n_neighbors, total_books)
 
-    # Select book indices based on curiosity range
     recommended_indices = sorted_indices[start_index:end_index]
 
     recommended_books = database.iloc[recommended_indices]

@@ -6,10 +6,9 @@ from main_pipeline.main import main_pipeline
 import pandas as pd
 from pathlib import Path
 
-ALPHA = 0.2
-EMBEDDINGS_SOURCES = ["titledesc", "genre"]
-
 app = FastAPI()
+app.state.alpha = 0.1
+app.state.embeddings_sources = ["titledesc", "genre"]
 app.state.dataset_path = Path("raw_data/VF_data_base_consolidate_clean.csv")
 app.state.n_books = pd.read_csv(app.state.dataset_path).shape[0]
 app.state.model_dir = Path(f"models/camembert_models")
@@ -28,8 +27,8 @@ async def predict(request: Request):
                              app.state.model_dir,
                              app.state.dataset_path,
                              n_neighbors=3,
-                             embeddings_sources=EMBEDDINGS_SOURCES,
-                             alpha=ALPHA)
+                             embeddings_sources=app.state.embeddings_sources,
+                             alpha=app.state.alpha)
     else :
         isbn = data['isbn']
         print(isbn)
