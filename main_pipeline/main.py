@@ -9,7 +9,7 @@ from gbooks_api.main import gbooks_lookup, gbooks_lookup_multibooks, gbooks_look
 from recommendation.main import main as recommender
 
 def main_pipeline(input_book: Union[np.array, str],
-                  photo_type: Literal["single", "multiple"],
+                  photo_type: Literal["single", "multiple", "isbn"],
                   curiosity: int,
                   model_dir: str,
                   dataset_path: str,
@@ -21,6 +21,7 @@ def main_pipeline(input_book: Union[np.array, str],
 
     Args:
 		input_book: Either an image vector or an ISBN (10 or 13)
+        photo_type: Type of input: "single" (single book), "multiple" (multiple books), or "isbn" (ISBN)
 		curiosity: Exploration level for recommendations (1-4)
 		model_dir: Path to the model directory
 		dataset_path: Path to the dataset
@@ -84,14 +85,15 @@ if __name__ == "__main__":
     n_books = pd.read_csv(dataset_path).shape[0]
     model_dir = Path(f"models/camembert_models/")
 
-    # # Example: Use an ISBN (10 or 13) as input
-    # input_book = "9782070643066"
+    # Example: Use an ISBN (10 or 13) as input
+    input_book = "9782070643066"
+    photo_type = "isbn" # "isbn" if input is not an image but an ISBN
 
-    # Alternative: Use an image input (uncomment to test)
-    image_path = Path("raw_data/image.png")
-    photo_type = "multiple" # "multiple" or "single"
-    image = Image.open(image_path)
-    input_book = np.array(image)
+    # # Alternative: Use an image input (uncomment to test)
+    # image_path = Path("raw_data/image.png")
+    # photo_type = "multiple" # "multiple" or "single"
+    # image = Image.open(image_path)
+    # input_book = np.array(image)
 
     # Run the recommendation pipeline
     recommended_books = main_pipeline(
