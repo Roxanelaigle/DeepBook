@@ -35,5 +35,10 @@ transformers==4.49.0
 sentencepiece==0.2.0
 
 ### Front ###
+google-cloud-storage==3.1.0
 fastapi==0.115.11
 uvicorn==0.34.0
+
+
+# additions for Docker:
+torch ==2.6.0
