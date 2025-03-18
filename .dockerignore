@@ -1,5 +1,33 @@
+# __pycache__/
+# *.pyc
+# .env
+# .git
+# .vscode
+
+
+# Ignore Python cache
 __pycache__/
 *.pyc
-.env
-.git
-.vscode
+*.pyo
+*.pyd
+
+# Ignore virtual environments
+venv/
+.env/
+
+# Ignore system files
+.DS_Store
+.idea/
+.vscode/
+
+
+*.ipynb
+test.py
+old_files/
+ol_dump_authors_*.csv
+ol_dump_authors_*.txt
+leboncoin_covers/
+tmp_chunk.csv
+scrapping.ipynb
+book_api_check.ipynb
+notebooks/
