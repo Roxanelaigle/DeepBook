@@ -21,4 +21,4 @@ RUN pip install -r requirements.txt
 # Set Python path so 'recommendation' becomes importable
 ENV PYTHONPATH=/app
 
-CMD uvicorn API_package.API_package.main:app --host 0.0.0.0 --port $PORT
+CMD uvicorn API_package.main:app --host 0.0.0.0 --port $PORT
