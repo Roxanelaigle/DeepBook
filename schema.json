@@ -1,0 +1,7 @@
+[
+  {"name": "type", "type": "STRING"},
+  {"name": "id", "type": "STRING"},
+  {"name": "revision", "type": "INTEGER"},
+  {"name": "timestamp", "type": "TIMESTAMP"},
+  {"name": "data", "type": "JSON"}
+]
