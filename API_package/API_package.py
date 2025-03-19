@@ -1,10 +1,13 @@
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, File, UploadFile
 import json
 import numpy as np
 from main_pipeline.main import main_pipeline
 import pandas as pd
 from pathlib import Path
+from PIL import Image
+import io
+from fastapi import Form
 
 app = FastAPI()
 app.state.alpha = 0.9
@@ -14,16 +17,16 @@ app.state.n_books = pd.read_csv(app.state.dataset_path).shape[0]
 app.state.model_dir = Path(f"models/camembert_models")
 
 @app.post("/")
-async def predict(request: Request):
+async def predict(photo_type : str = Form(...),curiosity_level :int = Form(...), image_array : UploadFile |None =None, isbn: str | None = Form(None)):
 
-    raw_data = await request.body()
-    data=json.loads(raw_data)
-    photo_type = str(data['photo_type'])
-    curiosity_level = int(data['curiosity_level'])
+    # file download
+    if image_array :
+        image_bytes = await image_array.read()
+        image= np.array(Image.open(io.BytesIO(image_bytes)), dtype=np.uint8)
+        print(image)
     print("curiosity_level : " + str(curiosity_level))
-    if 'image_array' in data.keys() :
-        image_array = np.array(data['image_array'], dtype=np.uint8)
-        return main_pipeline(image_array,
+    if image is not None :
+        return main_pipeline(image,
                              photo_type,
                              curiosity_level,
                              app.state.model_dir,
@@ -32,7 +35,6 @@ async def predict(request: Request):
                              embeddings_sources=app.state.embeddings_sources,
                              alpha=app.state.alpha)
     else :
-        isbn = data['isbn']
         print(isbn)
         return main_pipeline(isbn,
                              photo_type,
