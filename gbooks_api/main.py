@@ -233,7 +233,7 @@ def gbooks_look_isbn(isbn_input: str) -> dict:
 
     # Recherche dans CSV
     try:
-        df = pd.read_csv('raw_data/VF_data_base_consolidate_clean.csv', dtype=str)
+        df = pd.read_csv('raw_data/clean_books.csv', dtype=str)
         result = df[(df['ISBN-10'] == isbn_input) | (df['ISBN-13'] == isbn_input)]
 
         if not result.empty:

@@ -143,7 +143,7 @@ if __name__ == "__main__":
     curiosity = 1
     n_neighbors = 3
     alpha = 0.2 # Adjust this to control genre influence
-    dataset_path = Path("raw_data/VF_data_base_consolidate_clean.csv")
+    dataset_path = Path("raw_data/clean_data.csv")
     model_dir = Path(f"models/camembert_models/")
 
     n_books = pd.read_csv(dataset_path).shape[0]
