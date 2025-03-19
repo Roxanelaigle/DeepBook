@@ -36,3 +36,4 @@ scrapping.ipynb
 leboncoin_covers/
 tmp_chunk.csv
 *.ipynb
+.streamlit

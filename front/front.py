@@ -96,7 +96,7 @@ if st.session_state["proceed_to_step_2"]:
         )
 
 
-    API_URL = "http://127.0.0.1:8000" # needs to be changed based on API!!
+    API_URL = st.secrets["API_URL"] # needs to be changed based on API!!
 
     if st.button('Démarrer'):
         st.session_state["curiosity_level"] = curiosity_level
