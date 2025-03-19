@@ -18,7 +18,7 @@ app.state.model_dir = Path(f"models/camembert_models")
 
 @app.post("/")
 async def predict(photo_type : str = Form(...),curiosity_level :int = Form(...), image_array : UploadFile |None =None, isbn: str | None = Form(None)):
-
+    image = None
     # file download
     if image_array :
         image_bytes = await image_array.read()
