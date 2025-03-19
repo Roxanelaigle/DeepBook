@@ -37,3 +37,4 @@ leboncoin_covers/
 tmp_chunk.csv
 *.ipynb
 .streamlit
+.cache

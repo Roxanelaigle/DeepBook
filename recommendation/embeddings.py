@@ -5,8 +5,8 @@ from loguru import logger
 from typing import Dict, List, Literal
 from transformers import CamembertTokenizer, TFCamembertModel
 
-tokenizer = CamembertTokenizer.from_pretrained('camembert-base')
-model = TFCamembertModel.from_pretrained('camembert-base')
+tokenizer = CamembertTokenizer.from_pretrained('camembert-base', local_files_only=True)
+model = TFCamembertModel.from_pretrained('camembert-base', local_files_only=True)
 
 def get_embeddings(texts: List[str], batch_size: int = 32) -> np.ndarray:
     """
