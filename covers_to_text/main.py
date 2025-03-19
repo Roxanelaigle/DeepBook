@@ -6,15 +6,12 @@ import supervision as sv
 from ultralytics import YOLO
 
 # Constants
-
 YOLO_MODEL = "yolo12l"
 DEFAULT_PATH_YOLO_MODEL = os.path.join("models","yolo_models",YOLO_MODEL+".pt")
 
-# Pre-loading -- running once to load into memory
-# Note: YOLO then reloads each time thereafter
-
-reader = easyocr.Reader(['fr','en']) # this needs to run once to load the model into memory
-model = YOLO(DEFAULT_PATH_YOLO_MODEL)
+# Pre-loading of models -- running only once
+reader = easyocr.Reader(['fr','en'], gpu=True) # this needs to run once to load the model into memory
+model = YOLO(DEFAULT_PATH_YOLO_MODEL) # init; default model: yolo 12l -> best balance found between speed & accuracy
 
 def yolo_book_scanner(img: np.ndarray, show_output: bool = False) -> list[np.ndarray]:
     '''
@@ -22,10 +19,6 @@ def yolo_book_scanner(img: np.ndarray, show_output: bool = False) -> list[np.nda
     The function looks for all the books present in a picture, and returns them as a list of cropped images (as numpy ndarrays).
     Books should either show their covers (e.g., multiple books laid out on a table) or show their sides (e.g., row of books on a bookshelf).
     '''
-
-    # init; default model: yolo 12l -> best balance found between speed & accuracy
-    model = YOLO(DEFAULT_PATH_YOLO_MODEL)
-
     # running model on the image
     # only looking for class #73 (books)
     # iou decreased to 0.1, i.e., low tolerance to duplicates/overlaps
@@ -79,7 +72,7 @@ def yolo_book_scanner(img: np.ndarray, show_output: bool = False) -> list[np.nda
 def picture_reader(img: np.ndarray, show_output: bool = False) -> list[str]:
     '''
     Text detection & extraction: returns the text of a book cover, under the form of a list of string.
-    Uses easy0CR without fine-tuning.
+    Uses easyOCR without fine-tuning.
     '''
     results = reader.readtext(img, detail = 1)
 
@@ -157,6 +150,7 @@ def picture_reader_multibooks(img: np.ndarray, show_output: bool = False) -> lis
         print(f"➡️ Reading the text of {len(imgs)} books identified thanks to the YOLO model.")
     for i in imgs:
         result.append(picture_reader(i,show_output))
+
     return result
 
 if __name__ == "__main__":
