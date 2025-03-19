@@ -81,7 +81,7 @@ if __name__ == "__main__":
     alpha = 1  # Adjust this to control genre influence
 
     # Dataset path
-    dataset_path = Path("raw_data/VF_data_base_consolidate_clean.csv")
+    dataset_path = Path("raw_data/clean_data.csv")
     n_books = pd.read_csv(dataset_path).shape[0]
     model_dir = Path(f"models/camembert_models/")
 
