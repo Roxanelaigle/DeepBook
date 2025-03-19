@@ -105,11 +105,14 @@ if st.session_state["proceed_to_step_2"]:
 
         # API Call
         if option == '📷Prendre une photo' and uploaded_file is not None:
-            payload = {"image_array": img_array_rgb.tolist(), "curiosity_level": curiosity_level, "photo_type" : photo_type}  # ✅ Ajout de photo_type
-            response = requests.post(API_URL, json=payload)
+            uploaded_file.seek(0)
+            file = {"image_array" : (uploaded_file.name, uploaded_file,uploaded_file.type)}
+            payload = {"curiosity_level": curiosity_level, "photo_type" : photo_type}  # ✅ Ajout de photo_type
+            response = requests.post(API_URL, data =payload, files = file)
+
         elif option == '📝Ajouter manuellement un ISBN' and "isbn" in st.session_state:
             payload = {"isbn": st.session_state["isbn"], "curiosity_level": curiosity_level, "photo_type" : photo_type}
-            response = requests.post(API_URL, json=payload)
+            response = requests.post(API_URL, data=payload)
         else:
             st.error("Veuillez fournir une image ou un ISBN")
             st.stop()
